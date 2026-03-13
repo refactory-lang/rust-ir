@@ -8,9 +8,10 @@ export function functionItem(config: FunctionItemConfig): FunctionItem {
   return {
     kind: 'function_item',
     name: config.name as FunctionItem['name'],
-    params: (config.params ?? []) as FunctionItem['params'],
+    parameters: (config.parameters ?? '') as FunctionItem['parameters'],
     returnType: config.returnType as FunctionItem['returnType'],
     body: config.body as FunctionItem['body'],
-    visibility: config.visibility
+    typeParameters: config.typeParameters as FunctionItem['typeParameters'],
+    children: config.children as FunctionItem['children'],
   };
 }

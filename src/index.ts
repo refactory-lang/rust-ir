@@ -8,7 +8,6 @@ export type {
   Visibility,
   FieldDeclaration,
   ParameterDeclaration,
-  ElseIfClause,
   StructItem,
   StructItemConfig,
   FunctionItem,

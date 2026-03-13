@@ -1,4 +1,4 @@
-import type { RustIrNode, StructItem, FunctionItem, UseDeclaration, ImplItem, IfExpression, MacroInvocation } from "./types.js";
+import type { RustIrNode, StructItem, FunctionItem, UseDeclaration, ImplItem, IfExpression, MacroInvocation, SourceFile } from "./types.js";
 
 /**
  * Render any IR node to a Rust source string.
@@ -22,8 +22,18 @@ export function render(node: RustIrNode): string {
     case "macro_invocation":
       return renderMacro(node);
     case "source_file":
-      return node.items.map(render).join("\n\n");
+      return renderSourceFile(node);
   }
+}
+
+// ---------------------------------------------------------------------------
+// source_file
+// ---------------------------------------------------------------------------
+
+function renderSourceFile(node: SourceFile): string {
+  if (!node.children) return '';
+  // children is a branded string[] — each entry is a rendered item
+  return (node.children as unknown as string[]).map(s => s).join("\n\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -31,7 +41,7 @@ export function render(node: RustIrNode): string {
 // ---------------------------------------------------------------------------
 
 function renderMacro(node: MacroInvocation): string {
-  return `${node.macro}!(${node.tokens})`;
+  return `${node.macro}!(${node.children})`;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,11 +50,8 @@ function renderMacro(node: MacroInvocation): string {
 
 function renderIf(node: IfExpression): string {
   let output = `if ${node.condition} {\n    ${node.consequence}\n}`;
-  for (const clause of node.elseIfClauses) {
-    output += ` else if ${clause.condition} {\n    ${clause.consequence}\n}`;
-  }
-  if (node.elseClause !== undefined) {
-    output += ` else {\n    ${node.elseClause}\n}`;
+  if (node.alternative !== undefined) {
+    output += ` else {\n    ${node.alternative}\n}`;
   }
   return output;
 }
@@ -57,15 +64,8 @@ function renderImpl(node: ImplItem): string {
   const header = node.trait
     ? `impl ${node.trait} for ${node.type} {`
     : `impl ${node.type} {`;
-  const methods = node.methods
-    .map((m) =>
-      renderFunction(m)
-        .split("\n")
-        .map((line) => `    ${line}`)
-        .join("\n")
-    )
-    .join("\n\n");
-  return methods.length > 0 ? `${header}\n${methods}\n}` : `${header}\n}`;
+  const body = node.body ? String(node.body) : '';
+  return body.length > 0 ? `${header}\n${body}\n}` : `${header}\n}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -81,8 +81,8 @@ function renderUse(node: UseDeclaration): string {
 // ---------------------------------------------------------------------------
 
 function renderFunction(node: FunctionItem): string {
-  const vis = node.visibility ? `${node.visibility} ` : "";
-  const paramList = node.params.map((p) => `${p.name}: ${p.type}`).join(", ");
+  const vis = node.children ? `${node.children} ` : "";
+  const paramList = node.parameters ? String(node.parameters) : "";
   const ret = node.returnType ? ` -> ${node.returnType}` : "";
   return `${vis}fn ${node.name}(${paramList})${ret} {\n    ${node.body}\n}`;
 }
@@ -93,18 +93,11 @@ function renderFunction(node: FunctionItem): string {
 
 function renderStruct(node: StructItem): string {
   const lines: string[] = [];
-  if (node.derives.length > 0) {
-    lines.push(`#[derive(${node.derives.join(", ")})]`);
-  }
-  const vis = node.visibility ? `${node.visibility} ` : "";
-  if (node.fields.length === 0) {
-    lines.push(`${vis}struct ${node.name};`);
+  const vis = node.children ? `${(node.children as unknown as string[])[0]} ` : "";
+  if (node.body) {
+    lines.push(`${vis}struct ${node.name} {\n${node.body}\n}`);
   } else {
-    lines.push(`${vis}struct ${node.name} {`);
-    for (const field of node.fields) {
-      lines.push(`    ${field.name}: ${field.type},`);
-    }
-    lines.push("}");
+    lines.push(`${vis}struct ${node.name};`);
   }
   return lines.join("\n");
 }

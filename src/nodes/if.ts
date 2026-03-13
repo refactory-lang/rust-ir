@@ -1,5 +1,5 @@
 // Implemented in Phase 8 (T027)
-export type { IfExpression, ElseIfClause, IfExpressionConfig } from '../types.js';
+export type { IfExpression, IfExpressionConfig } from '../types.js';
 import type { IfExpression, IfExpressionConfig } from '../types.js';
 
 export function ifExpression(config: IfExpressionConfig): IfExpression {
@@ -9,7 +9,6 @@ export function ifExpression(config: IfExpressionConfig): IfExpression {
     kind: 'if_expression',
     condition: config.condition as IfExpression['condition'],
     consequence: config.consequence as IfExpression['consequence'],
-    elseIfClauses: (config.elseIfClauses ?? []) as IfExpression['elseIfClauses'],
-    elseClause: config.elseClause as IfExpression['elseClause']
+    alternative: config.alternative as IfExpression['alternative'],
   };
 }

@@ -8,6 +8,8 @@ export function implItem(config: ImplItemConfig): ImplItem {
     kind: 'impl_item',
     type: config.type as ImplItem['type'],
     trait: config.trait as ImplItem['trait'],
-    methods: config.methods ?? []
+    body: config.body as ImplItem['body'],
+    typeParameters: config.typeParameters as ImplItem['typeParameters'],
+    children: config.children as ImplItem['children'],
   };
 }

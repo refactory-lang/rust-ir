@@ -7,8 +7,8 @@ export function structItem(config: StructItemConfig): StructItem {
   return {
     kind: 'struct_item',
     name: config.name as StructItem['name'],
-    fields: (config.fields ?? []) as StructItem['fields'],
-    derives: config.derives ?? [],
-    visibility: config.visibility
+    body: config.body as StructItem['body'],
+    typeParameters: config.typeParameters as StructItem['typeParameters'],
+    children: config.children as StructItem['children'],
   };
 }
