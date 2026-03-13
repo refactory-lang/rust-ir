@@ -1,281 +1,244 @@
 # Tasks: Rust IR Builder
 
 **Input**: Design documents from `/specs/001-rust-ir-builder/`
-**Prerequisites**: plan.md (required), spec.md (required for user stories)
+**Prerequisites**: plan.md ✅ · spec.md ✅ · research.md ✅ · data-model.md ✅ · contracts/public-api.ts ✅ · quickstart.md ✅
 
-## Format: `[ID] [P?] [Story] Description`
+**TDD mandatory** (Constitution Principle III): in every user story phase, tests are written first and must fail before implementation begins.
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US7)
-- Exact file paths included in descriptions
+**Tests are included** because the constitution mandates TDD for every IR node kind (render round-trip + negative test required per kind).
 
----
+## Format: `[ID] [P?] [Story?] Description with file path`
 
-## Phase 0: Project Scaffolding
-
-**Purpose**: Initialize the TypeScript project so `vitest` runs with zero tests and `tsc` compiles cleanly.
-
-- [ ] T001 Create `package.json` with `"type": "module"`, name `@refactory/rust-ir`, devDependencies: `@codemod.com/jssg-types`, `typescript`, `vitest`
-- [ ] T002 Create `tsconfig.json` — strict, ESM, `noEmit`, `"types": ["@codemod.com/jssg-types"]`, include `src/**/*.ts`
-- [ ] T003 Create `vitest.config.ts` — default config
-- [ ] T004 Create empty `src/index.ts`
-- [ ] T005 Verify: `npm install` succeeds, `npx vitest run` exits 0, `npx tsc --noEmit` exits 0
-
-**Checkpoint**: Project skeleton compiles and test runner works
+- **[P]**: Can run in parallel with other tasks in this phase (different files, no blocking dependency)
+- **[US_n_]**: Which user story this task belongs to — required in all user story phases
+- Sequential IDs across all phases
 
 ---
 
-## Phase 1: Core Infrastructure (US7 — Validation)
+## Phase 1: Setup
 
-**Purpose**: `validate()` and `indent()` — shared utilities that all node renderers depend on.
+**Purpose**: Project initialization — package.json, TypeScript config, Vitest, directory skeleton.
 
-**Goal (US7)**: Validate rendered output detects errors. The safety net for the entire IR.
+- [X] T001 Initialize `package.json` with name `rust-ir`, `"type": "module"`, TypeScript 5.x, Vitest, and `@codemod.com/jssg-types` as devDeps — **zero npm runtime dependencies** (no `web-tree-sitter`, no `tree-sitter-rust`) in `package.json`
+- [X] T002 [P] Create `tsconfig.json` with `strict`, `module: ESNext`, `moduleResolution: bundler`, `noEmit: true` in `tsconfig.json`
+- [X] T003 [P] Create `vitest.config.ts` targeting `tests/**/*.test.ts` with ESM transform **and a `resolve.alias` mapping `codemod:ast-grep` → `tests/__mocks__/ast-grep.ts`** so unit tests can call `validate()` without the JSSG runtime in `vitest.config.ts`; also create `tests/__mocks__/ast-grep.ts` with a heuristic mock implementing the ast-grep `parse` interface
 
-**Independent Test**: Pass malformed Rust to `validate()`, confirm errors. Pass valid Rust, confirm ok.
-
-### Tests (write FIRST — must FAIL before implementation)
-
-- [ ] T006 [US7] Write `tests/validate.test.ts`:
-  - Test: valid Rust (`fn main() {}`) → `{ ok: true }`
-  - Test: invalid Rust (`fn {}`) → `{ ok: false, errors: [...] }` with offset and kind
-  - Test: empty string → `{ ok: true }` (valid empty source_file)
-  - Test: struct with syntax error → error detected
-
-### Implementation
-
-- [ ] T007 [US7] Create `src/validate.ts` — `validate(source: string): ValidationResult`
-  - Import `parse` from `codemod:ast-grep`
-  - Parse with `parse<Rust>("rust", source)`
-  - Walk tree depth-first collecting `ERROR` nodes (offset + parent kind)
-  - Export `ValidationResult` type
-- [ ] T008 [P] Create `src/indent.ts` — `indent(text: string, level: number): string`
-  - Add `level * 4` spaces to each non-empty line
-  - Export function
-- [ ] T009 Run `tests/validate.test.ts` — all tests pass
-- [ ] T010 Export from `src/index.ts`: `validate`, `ValidationResult`, `indent`
-
-**Checkpoint**: `validate()` works, `indent()` works, all Phase 1 tests green
+**Checkpoint**: `npm install` succeeds; `npx tsc --noEmit` reports only "no input files"
 
 ---
 
-## Phase 2: P1 Node Kinds — Struct + Function (US1, US2)
+## Phase 2: Foundational
 
-**Purpose**: The two most-used node kinds, covering the main output of `tier1-syntax.ts`.
+**Purpose**: Shared types, render dispatcher skeleton, and public entry point. Must be complete before any user story phase can begin.
 
-### User Story 1 — StructItem
+**⚠️ CRITICAL**: No user story implementation can begin until this phase is complete.
 
-**Goal**: Build and render a Rust struct from a typed config object.
+- [X] T004 Define all shared types in `src/types.ts` — `Visibility`, `FieldDeclaration`, `ParameterDeclaration`, `ElseIfClause`, `RustIrNode` discriminated union (7 variants), `ValidationResult`
+- [X] T005 Create `render()` dispatcher skeleton in `src/render.ts` — exhaustive `switch (node.kind)` covering all 7 IR node kinds, each branch throwing `Error(\`render: ${node.kind} not yet implemented\`)`
+- [X] T006 Create `src/index.ts` re-exporting everything from `src/types.ts`, `src/render.ts`, `src/validate.ts`, and all `src/nodes/*.ts` modules (stubs at this stage)
 
-**Independent Test**: Build a struct with fields, render, validate → zero ERROR nodes.
-
-#### Tests (write FIRST)
-
-- [ ] T011 [US1] Write `tests/nodes/struct-item.test.ts`:
-  - Test: struct with two fields → parseable `struct_item` with `field_declaration` children
-  - Test: struct with `derives: ["Debug", "Clone", "PartialEq"]` → output starts with `#[derive(...)]`
-  - Test: struct with zero fields → `pub struct Empty;` (unit struct)
-  - Test: field with generic type `Vec<String>` → preserved without escaping
-  - Negative: rendered output passes `validate()` for all positive cases
-
-#### Implementation
-
-- [ ] T012 [US1] Create `src/nodes/struct-item.ts`:
-  - Export `FieldDeclaration` interface: `{ name: string; type: string; visibility?: string }`
-  - Export `StructItemConfig` interface: `{ name: string; fields: FieldDeclaration[]; derives?: string[]; visibility?: string }`
-  - Export `renderStructItem(config: StructItemConfig): string`
-  - Handle: derive attribute, visibility (default "pub"), field list, unit struct (empty fields)
-- [ ] T013 [US1] Run `tests/nodes/struct-item.test.ts` — all tests pass
-- [ ] T014 [US1] Add re-exports to `src/index.ts`
-
-### User Story 2 — FunctionItem
-
-**Goal**: Build and render a Rust function from a typed config object.
-
-**Independent Test**: Build a function with params and body, render, validate.
-
-#### Tests (write FIRST)
-
-- [ ] T015 [P] [US2] Write `tests/nodes/function-item.test.ts`:
-  - Test: function with one param and return type → parseable `function_item` with `parameters`
-  - Test: function with no return type → no `-> Type` in output
-  - Test: function with `visibility: "pub"` → starts with `pub fn`
-  - Test: multi-line body → properly indented
-  - Negative: all positive cases pass `validate()`
-
-#### Implementation
-
-- [ ] T016 [US2] Create `src/nodes/function-item.ts`:
-  - Export `Parameter` interface: `{ name: string; type: string }`
-  - Export `FunctionItemConfig` interface: `{ name: string; params: Parameter[]; returnType?: string; body: string; visibility?: string }`
-  - Export `renderFunctionItem(config: FunctionItemConfig): string`
-  - Handle: visibility (default "pub"), param list, optional return type, body indentation via `indent()`
-- [ ] T017 [US2] Run `tests/nodes/function-item.test.ts` — all tests pass
-- [ ] T018 [US2] Add re-exports to `src/index.ts`
-
-**Checkpoint**: StructItem + FunctionItem render and validate. Covers tier1-syntax.ts struct + function output.
+**Checkpoint**: `npx tsc --noEmit` compiles cleanly; `src/index.ts` exports are resolvable.
 
 ---
 
-## Phase 3: P2 Node Kinds — Use + Impl + If (US3, US4, US5)
+## Phase 3: User Story 7 — Validate detects errors (Priority: P1)
 
-**Purpose**: Secondary node kinds needed by tier2-modules.ts and tier2-control.ts.
+**Goal**: `validate()` correctly detects `ERROR` nodes in malformed Rust source and returns `{ ok: true }` for valid source, using a bundled tree-sitter-rust parser with no Node.js built-in dependencies.
 
-### User Story 3 — UseDeclaration
+**Independent Test**: Call `validate("pub struct {")` — assert `ok: false` with an error entry at the correct byte offset. Call `validate("pub struct Empty;")` — assert `ok: true`.
 
-**Goal**: Build and render a Rust `use` statement.
+> **TDD**: Write T007 first. Confirm it fails. Then implement T008. Confirm T007 passes.
 
-#### Tests (write FIRST)
+- [X] T007 [P] [US7] Write failing tests for `validate()` in `tests/unit/validate.test.ts` — three test cases: (1) valid Rust source returns `{ ok: true }`, (2) malformed source (e.g., `"pub struct {"`  ) returns `{ ok: false, errors: [{ offset, kind }] }`, (3) Rust-keyword used as identifier (e.g., `"pub struct fn;"`) returns `{ ok: false }` — covers spec edge case "identifier is a Rust keyword"; tests must fail at this point (`validate.ts` is a stub)
+- [X] T008 [US7] Implement `validate()` in `src/validate.ts` — import `parse` from `codemod:ast-grep`, call `parse("rust", source)`, use `.findAll({ rule: { kind: "ERROR" } })` to collect error nodes, map each to `{ offset: node.range().start.index, kind: "ERROR" }`, return `ValidationResult`; no WASM loading, no Node.js built-ins
+- [X] T009 [US7] Run `tests/unit/validate.test.ts` — all cases pass; confirm `validate("pub struct {")` returns `ok: false` and `validate("pub struct Empty;")` returns `ok: true`
 
-- [ ] T019 [P] [US3] Write `tests/nodes/use-declaration.test.ts`:
-  - Test: path `["std", "collections"]` + items `["HashMap", "BTreeMap"]` → `use std::collections::{HashMap, BTreeMap};`
-  - Test: single item → `use std::collections::HashMap;` (no braces)
-  - Negative: all pass `validate()`
-
-#### Implementation
-
-- [ ] T020 [US3] Create `src/nodes/use-declaration.ts`:
-  - Export `UseDeclarationConfig`: `{ path: string[]; items: string[] }`
-  - Export `renderUseDeclaration(config): string`
-  - Handle: path joining with `::`, single vs. multi item (braces), trailing semicolon
-- [ ] T021 [US3] Run tests — all pass
-- [ ] T022 [US3] Add re-exports to `src/index.ts`
-
-### User Story 4 — ImplItem
-
-**Goal**: Build and render a Rust `impl` block with methods.
-
-#### Tests (write FIRST)
-
-- [ ] T023 [P] [US4] Write `tests/nodes/impl-item.test.ts`:
-  - Test: inherent impl with one method → parseable `impl_item` with `declaration_list`
-  - Test: trait impl (`Drop` for `Guard`) → output contains `impl Drop for Guard`
-  - Test: impl with `&mut self` method → self parameter renders correctly
-  - Negative: all pass `validate()`
-
-#### Implementation
-
-- [ ] T024 [US4] Create `src/nodes/impl-item.ts`:
-  - Export `ImplItemConfig`: `{ type: string; trait?: string; methods: FunctionItemConfig[] }`
-  - Export `renderImplItem(config): string`
-  - Handle: inherent vs. trait impl, methods rendered via `renderFunctionItem()` with adjusted indentation
-  - Depends on: `renderFunctionItem` from `function-item.ts`
-- [ ] T025 [US4] Run tests — all pass
-- [ ] T026 [US4] Add re-exports to `src/index.ts`
-
-### User Story 5 — IfExpression
-
-**Goal**: Build and render a Rust if/else-if/else expression.
-
-#### Tests (write FIRST)
-
-- [ ] T027 [P] [US5] Write `tests/nodes/if-expression.test.ts`:
-  - Test: if + else → parseable `if_expression` with `else_clause`
-  - Test: if + else-if + else → chained `else if` clauses, zero ERROR nodes
-  - Test: if only (no else) → valid expression
-  - Negative: all pass `validate()`
-
-#### Implementation
-
-- [ ] T028 [US5] Create `src/nodes/if-expression.ts`:
-  - Export `IfBranch`: `{ condition: string; body: string }`
-  - Export `IfExpressionConfig`: `{ ifBranch: IfBranch; elseIfBranches?: IfBranch[]; elseBranch?: string }`
-  - Export `renderIfExpression(config): string`
-  - Handle: condition, braces, else-if chains, optional else
-- [ ] T029 [US5] Run tests — all pass
-- [ ] T030 [US5] Add re-exports to `src/index.ts`
-
-**Checkpoint**: All P1 + P2 node kinds render and validate. Covers tier1-syntax, tier2-modules, tier2-control output.
+**Checkpoint**: US7 acceptance scenarios satisfied — SC-002 (`validate` detects malformed Rust in 100% of negative test cases).
 
 ---
 
-## Phase 4: P3 Node Kinds — Macro + SourceFile (US6, US8)
+## Phase 4: User Story 1 — Build and render a struct (Priority: P1) 🎯 MVP
 
-**Purpose**: Lower-priority nodes for macro invocations and file composition.
+**Goal**: `structItem()` constructs a `StructItem` IR node; `render(node)` emits a syntactically valid `struct` declaration that passes `validate()`.
 
-### User Story 6 — MacroInvocation
+**Independent Test**: Build a `StructItem` with two fields, call `render()`, call `validate()` on the result, assert `ok: true` and correct tree-sitter node kind `struct_item`.
 
-**Goal**: Build and render a Rust macro call (e.g., `format!(...)`).
+> **TDD**: Write T010 first. Confirm it fails (render throws "not implemented"). Implement T011–T012. Confirm T010 passes.
 
-#### Tests (write FIRST)
+- [X] T010 [P] [US1] Write failing tests in `tests/unit/render/struct.test.ts` — acceptance scenarios: (1) named fields + derives renders valid `pub struct` with `#[derive(...)]`, (2) zero-fields renders unit struct `pub struct Name;`, (3) `structItem({ name: "" })` throws a descriptive error; all positive cases call `validate()` and assert `ok: true`
+- [X] T011 [P] [US1] Implement `StructItem` interface and `structItem()` factory in `src/nodes/struct.ts` — validate required fields at runtime (`name` non-empty, each field's `name`/`type` non-empty), default `fields: []` and `derives: []`
+- [X] T012 [US1] Implement `struct_item` case in `src/render.ts` switch — emit `#[derive(...)]` when `derives` non-empty, named-field body or unit-struct form based on `fields.length`, prepend `pub` when `visibility === "pub"`
+- [X] T013 [US1] Run `tests/unit/render/struct.test.ts` — all round-trip cases pass (`render` → `validate` → `ok: true`), negative cases verified
 
-- [ ] T031 [P] [US6] Write `tests/nodes/macro-invocation.test.ts`:
-  - Test: `format` macro with args → `format!("hello {}", name)`, parses as `macro_invocation`
-  - Test: `vec` macro → `vec![1, 2, 3]`
-  - Negative: all pass `validate()`
-
-#### Implementation
-
-- [ ] T032 [US6] Create `src/nodes/macro-invocation.ts`:
-  - Export `MacroInvocationConfig`: `{ name: string; args: string; delimiter?: "(" | "[" }`
-  - Export `renderMacroInvocation(config): string`
-  - Handle: `name!( args )` or `name![ args ]` depending on delimiter (default `(`)
-- [ ] T033 [US6] Run tests — all pass
-- [ ] T034 [US6] Add re-exports to `src/index.ts`
-
-### User Story 8 — SourceFile
-
-**Goal**: Compose multiple top-level IR nodes into a complete Rust source file.
-
-#### Tests (write FIRST)
-
-- [ ] T035 [US8] Write `tests/nodes/source-file.test.ts`:
-  - Test: file with `[UseDeclaration, StructItem, ImplItem]` → parseable `source_file` with 3 top-level children
-  - Test: empty file → empty string, passes `validate()`
-  - Negative: full output passes `validate()`
-
-#### Implementation
-
-- [ ] T036 [US8] Create `src/nodes/source-file.ts`:
-  - Export `TopLevelNode` discriminated union
-  - Export `SourceFileConfig`: `{ items: TopLevelNode[] }`
-  - Export `renderSourceFile(config): string`
-  - Dispatch each item to its render function, join with `\n\n`
-  - Depends on: all other render functions
-- [ ] T037 [US8] Run tests — all pass
-- [ ] T038 [US8] Add re-exports to `src/index.ts`
-
-**Checkpoint**: All 7 node kinds + validate implemented and tested. Full library complete.
+**Checkpoint**: US1 fully functional. `structItem` + `render` + `validate` loop works end-to-end.
 
 ---
 
-## Phase 5: Integration Proof (SC-004, SC-005)
+## Phase 5: User Story 2 — Build and render a function (Priority: P1)
 
-**Purpose**: Verify the library works in the real JSSG transform context.
+**Goal**: `functionItem()` + `render()` emits a syntactically valid `fn` declaration including optional return type, parameters, and visibility.
 
-- [ ] T039 [SC-004] In `python-to-rust` repo: refactor `translateClass()` in `transforms/tier1-syntax.ts` to use `renderStructItem()` from `@refactory/rust-ir` instead of string concatenation
-- [ ] T040 [SC-005] Run `python-to-rust` e2e test (`tests/e2e/run.sh`) — verify identical Rust output
-- [ ] T041 Final: `npx tsc --noEmit` → zero errors; `npx vitest run` → all tests pass; all success criteria met
+**Independent Test**: Build a `FunctionItem` with two params and a body, render, call `validate()`, assert `ok: true`.
 
-**Checkpoint**: Library proven in production context. Feature complete.
+> **TDD**: Write T014 first. Confirm it fails. Implement T015–T016. Confirm T014 passes.
+
+- [X] T014 [P] [US2] Write failing tests in `tests/unit/render/function.test.ts` — acceptance scenarios: (1) params + explicit return type renders `pub fn name(p: T) -> R { ... }`, (2) no return type omits `->` clause, (3) `pub` visibility prepends correctly, (4) `functionItem({ name: "f", body: "" })` throws; all positive cases validate to `ok: true`
+- [X] T015 [P] [US2] Implement `FunctionItem` interface and `functionItem()` factory in `src/nodes/function.ts` — validate `name` and `body` non-empty at runtime, default `params: []`
+- [X] T016 [US2] Implement `function_item` case in `src/render.ts` switch — emit `fn name(params) -> ReturnType { body }`, omit `-> ReturnType` when `returnType` is `undefined`, prepend visibility
+- [X] T017 [US2] Run `tests/unit/render/function.test.ts` — all cases pass with `validate()` confirming `ok: true`
+
+**Checkpoint**: US1 + US2 both independently functional. `ImplItem` methods (US4) can now use `functionItem`.
+
+---
+
+## Phase 6: User Story 3 — Build and render a use declaration (Priority: P2)
+
+**Goal**: `useDeclaration()` + `render()` emits `use path::Item;` (single) or `use path::{A, B};` (multi-item).
+
+**Independent Test**: Build a `UseDeclaration` with path `["std", "collections"]` and items `["HashMap", "BTreeMap"]`, render, validate, assert `ok: true`.
+
+> **TDD**: Write T018 first. Confirm it fails. Implement T019–T020. Confirm T018 passes.
+
+- [X] T018 [P] [US3] Write failing tests in `tests/unit/render/use.test.ts` — acceptance scenarios: (1) multi-item path renders `use a::b::{X, Y};` with `ok: true`, (2) single item omits braces `use a::b::X;`, (3) empty `path` or `items` array throws
+- [X] T019 [P] [US3] Implement `UseDeclaration` interface and `useDeclaration()` factory in `src/nodes/use.ts` — validate `path` and `items` are non-empty arrays of non-empty strings
+- [X] T020 [US3] Implement `use_declaration` case in `src/render.ts` switch — join path with `::`, single item renders without braces, multi-item renders `{ A, B }`, append `;`
+- [X] T021 [US3] Run `tests/unit/render/use.test.ts` — all cases pass with `validate()` confirming `ok: true`
+
+**Checkpoint**: US3 complete. `SourceFile` composition (US8) can now include `UseDeclaration` nodes.
+
+---
+
+## Phase 7: User Story 4 — Build and render an impl block (Priority: P2)
+
+**Goal**: `implItem()` + `render()` emits `impl Type { ... }` (inherent) or `impl Trait for Type { ... }` (trait impl) with properly rendered method bodies.
+
+**Independent Test**: Build an `ImplItem` for type `Guard` implementing trait `Drop` with a `drop` method, render, validate, assert `ok: true` and output contains `impl Drop for Guard`.
+
+> **TDD**: Write T022 first. Confirm it fails. Implement T023–T024. Confirm T022 passes.
+
+- [X] T022 [P] [US4] Write failing tests in `tests/unit/render/impl.test.ts` — acceptance scenarios: (1) inherent impl renders `impl Type { fn method... }` with zero ERROR nodes, (2) trait impl renders `impl Drop for Guard { fn drop... }`, (3) `implItem({ type: "" })` throws
+- [X] T023 [P] [US4] Implement `ImplItem` interface and `implItem()` factory in `src/nodes/impl.ts` — validate `type` non-empty, default `methods: []`, accept optional `trait`
+- [X] T024 [US4] Implement `impl_item` case in `src/render.ts` switch — emit `impl Trait for Type { methods }` or `impl Type { methods }`, render each method via recursive `render()` call on the `FunctionItem`, indent method bodies
+- [X] T025 [US4] Run `tests/unit/render/impl.test.ts` — all cases pass with `validate()` confirming `ok: true`
+
+**Checkpoint**: US4 complete. The Drop translation pattern (`tier2-control.ts`) has a typed IR path.
+
+---
+
+## Phase 8: User Story 5 — Build and render an if expression (Priority: P2)
+
+**Goal**: `ifExpression()` + `render()` emits `if … { } else if … { } else { }` chains that parse without ERROR nodes.
+
+**Independent Test**: Build an `IfExpression` with a condition, one `else if` clause, and an `else` clause; render; validate; assert `ok: true`.
+
+> **TDD**: Write T026 first. Confirm it fails. Implement T027–T028. Confirm T026 passes.
+
+- [X] T026 [P] [US5] Write failing tests in `tests/unit/render/if.test.ts` — acceptance scenarios: (1) `if + else` renders with `else_clause` in parse tree, (2) two else-if clauses render without ERROR nodes, (3) no `else` omits else block entirely, (4) `ifExpression({ condition: "", consequence: "x" })` throws
+- [X] T027 [P] [US5] Implement `IfExpression` interface, `ElseIfClause` interface, and `ifExpression()` factory in `src/nodes/if.ts` — validate `condition` and `consequence` non-empty, default `elseIfClauses: []`
+- [X] T028 [US5] Implement `if_expression` case in `src/render.ts` switch — emit `if cond { cons }`, append ` else if cond { cons }` for each clause, append ` else { elseClause }` when present
+- [X] T029 [US5] Run `tests/unit/render/if.test.ts` — all cases pass with `validate()` confirming `ok: true`
+
+**Checkpoint**: US5 complete. Typed if/elif/else IR available for `tier1-syntax.ts` refactor.
+
+---
+
+## Phase 9: User Story 6 — Build and render a macro invocation (Priority: P3)
+
+**Goal**: `macroInvocation()` + `render()` emits `macro!(tokens)` that tree-sitter parses as `macro_invocation`.
+
+**Independent Test**: Build a `MacroInvocation` for `format!`, render, validate, assert `ok: true`.
+
+> **TDD**: Write T030 first. Confirm it fails. Implement T031–T032. Confirm T030 passes.
+
+- [X] T030 [P] [US6] Write failing tests in `tests/unit/render/macro.test.ts` — acceptance scenario: `macroInvocation({ macro: "format", tokens: '"hello {}", name' })` renders `format!("hello {}", name)` and parses as `macro_invocation`; empty `macro` or `tokens` throws
+- [X] T031 [P] [US6] Implement `MacroInvocation` interface and `macroInvocation()` factory in `src/nodes/macro.ts` — validate `macro` and `tokens` non-empty
+- [X] T032 [US6] Implement `macro_invocation` case in `src/render.ts` switch — emit `macro!(tokens)`
+- [X] T033 [US6] Run `tests/unit/render/macro.test.ts` — acceptance scenario passes with `validate()` confirming `ok: true`
+
+**Checkpoint**: US6 complete. All 6 individual node kinds implemented and tested.
+
+---
+
+## Phase 10: User Story 8 — Compose a source file (Priority: P3)
+
+**Goal**: `sourceFile()` + `render()` assembles multiple top-level IR nodes into a complete Rust source file separated by blank lines, producing zero ERROR nodes in the full-file parse.
+
+**Independent Test**: Build a `SourceFile` with `[UseDeclaration, StructItem, ImplItem]`, render, validate, assert `ok: true` and output parses as `source_file` with three top-level children.
+
+> **TDD**: Write T034 first. Confirm it fails. Implement T035–T036. Confirm T034 passes.
+
+- [X] T034 [P] [US8] Write failing tests in `tests/unit/render/source-file.test.ts` — acceptance scenario: `SourceFile` with `[UseDeclaration, StructItem, ImplItem]` renders with `\n\n` separation, output parses as `source_file` with three top-level children and zero ERROR nodes; `sourceFile({ items: [] })` throws
+- [X] T035 [P] [US8] Implement `SourceFile` interface and `sourceFile()` factory in `src/nodes/source-file.ts` — validate `items` is non-empty array
+- [X] T036 [US8] Implement `source_file` case in `src/render.ts` switch — map `items` through recursive `render()`, join with `\n\n`
+- [X] T037 [US8] Run `tests/unit/render/source-file.test.ts` — all cases pass with `validate()` confirming `ok: true`
+
+**Checkpoint**: All 7 node kinds implemented. SC-001 satisfied — every kind has a passing render+validate round-trip test.
+
+---
+
+## Phase 11: Polish & Cross-Cutting Concerns
+
+**Purpose**: TypeScript strict-mode gate, JSSG runtime integration test, and SC-004 real-world refactor validation.
+
+- [X] T038 Run `npx tsc --noEmit` across entire project — fix any remaining strict-mode errors in `src/` and `tests/`; target: zero TypeScript errors (SC-003)
+- [X] T039 [P] Write and run integration test in `tests/integration/jssg-compat.test.ts` — create a minimal JSSG transform fixture at `tests/fixtures/simple-struct.transform.ts` that imports `structItem`, `render`, `validate` from `rust-ir`; the test invokes the codemod runner against a trivial input fixture, asserts no runtime errors and `validate()` returns `ok: true` using the JSSG runtime's live `codemod:ast-grep` parser (no mock); confirms SC-005
+- [ ] T040 Refactor `tier1-syntax.ts` in the Python-to-Rust refactory repo (`refactory-python-to-rust-phase0/` — sibling directory of this repo, branch `main`) to replace struct string-concatenation with `structItem()` + `render()` — run that repo's existing test suite to confirm Rust output is byte-identical to pre-refactor (SC-004). Coordinate: ensure `rust-ir` is published (or path-linked) before executing this task.
+- [X] T041 [P] Run full Vitest suite (`npx vitest run`) — all unit and integration tests pass; confirm SC-001 (7 node kinds all have passing round-trip tests), SC-002 (validate detects malformed Rust in all negative cases), SC-003 (zero TS errors)
+
+**Checkpoint**: All success criteria met. Library ready for merge.
 
 ---
 
 ## Dependency Graph
 
 ```
-T001-T005 (scaffolding)
-    │
-    ▼
-T006-T010 (validate + indent)
-    │
-    ├──────────────────┐
-    ▼                  ▼
-T011-T014 (struct)   T015-T018 (function)  ← can run in parallel
-    │                  │
-    │    ┌─────────────┤
-    │    │             │
-    ▼    ▼             ▼
-T019-T022 (use) [P]  T023-T026 (impl)     T027-T030 (if) [P]
-                       │                        │
-    ┌──────────────────┴────────────────────────┘
-    ▼
-T031-T034 (macro) [P]   T035-T038 (source_file)
-                              │
-                              ▼
-                         T039-T041 (integration)
+Phase 1 (Setup)
+  └── Phase 2 (Foundational: types.ts + render skeleton + index.ts)
+        └── Phase 3 (US7: validate.ts — MUST complete before Phase 4+)
+              ├── Phase 4 (US1: struct_item)   ─┐
+              ├── Phase 5 (US2: function_item)   ├── P1 stories — parallel with each other
+              ├── Phase 6 (US3: use_declaration) ─┐
+              ├── Phase 7 (US4: impl_item)         ├── P2 stories — US4 benefits from US2 done first
+              ├── Phase 8 (US5: if_expression)   ──┘
+              ├── Phase 9 (US6: macro_invocation) ─── P3, independent
+              └── Phase 10 (US8: source_file)   ← uses all kinds; best after US1–US6
+                    └── Phase 11 (Polish)
 ```
 
-**Parallelizable pairs**:
-- T011-T014 (struct) ‖ T015-T018 (function)
-- T019-T022 (use) ‖ T027-T030 (if)
-- T031-T034 (macro) ‖ T035-T038 (source_file) — only if macro tests don't need source_file
+**Parallel opportunities within each story phase**:
+- The test file task `[P]` and the node implementation file task `[P]` are always parallel — different files, no blocking dependency on each other
+- The `render.ts` case task depends on the node implementation file being written first
+
+**Phases 4–9 can be executed in parallel once Phase 3 is complete**, since they target independent source files. Exception: US4 (ImplItem) uses FunctionItem, so US2 should be complete first.
+
+---
+
+## Implementation Strategy
+
+**MVP scope (T001–T037)**: Full library with all 7 node kinds, TDD tests, and `validate()` — delivers SC-001 and SC-002.
+
+**Suggested iteration order**:
+1. **Sprint 1 (MVP core)**: Phase 1 + 2 + 3 (setup, foundations, validate) → Phase 4 + 5 (struct + function, both P1)
+2. **Sprint 2**: Phase 6 + 7 + 8 (use, impl, if — all P2)
+3. **Sprint 3**: Phase 9 + 10 (macro, source file — both P3) + Phase 11 (polish, integration test, SC-004 refactor)
+
+**Do NOT begin Phase 11 (polish)** until all 7 node kind tests pass — the `tier1-syntax.ts` refactor (T040) requires a complete, stable library.
+
+---
+
+## Task Summary
+
+| Phase | Story | Priority | Tasks | Test count |
+|-------|-------|----------|-------|------------|
+| 1 – Setup | — | — | T001–T003 | 0 |
+| 2 – Foundational | — | — | T004–T006 | 0 |
+| 3 – Validate | US7 | P1 | T007–T009 | 2 (pos + neg) |
+| 4 – Struct | US1 | P1 🎯 | T010–T013 | 3 |
+| 5 – Function | US2 | P1 | T014–T017 | 4 |
+| 6 – Use declaration | US3 | P2 | T018–T021 | 3 |
+| 7 – Impl block | US4 | P2 | T022–T025 | 3 |
+| 8 – If expression | US5 | P2 | T026–T029 | 4 |
+| 9 – Macro invocation | US6 | P3 | T030–T033 | 2 |
+| 10 – Source file | US8 | P3 | T034–T037 | 2 |
+| 11 – Polish | — | — | T038–T041 | 1 (integration) |
+| **Total** | | | **41 tasks** | **24 tests** |

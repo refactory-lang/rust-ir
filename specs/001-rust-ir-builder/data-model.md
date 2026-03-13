@@ -7,7 +7,7 @@ All IR nodes are **plain TypeScript objects** (discriminated union). Each node h
 The public API exposes:
 - A **factory function** per node kind to construct validated IR nodes.
 - A standalone **`render(node)`** function that pattern-matches on `kind` and emits Rust source.
-- A standalone **`validate(source)`** function backed by a bundled tree-sitter-rust parser.
+- A standalone **`validate(source)`** function that calls `parse("rust", source)` from the JSSG runtime's `codemod:ast-grep` virtual module.
 
 ---
 

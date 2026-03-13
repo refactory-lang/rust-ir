@@ -230,14 +230,13 @@ export declare function functionItem(config: {
 /**
  * Construct a `UseDeclaration` IR node.
  *
- * @throws {Error} if `path` or `items` is empty, or any element is empty.
+ * @throws {Error} if `argument` is empty.
  *
  * @example
- * const node = useDeclaration({ path: ["std", "collections"], items: ["HashMap"] });
+ * const node = useDeclaration({ argument: "std::collections::HashMap" });
  */
 export declare function useDeclaration(config: {
-  path: string[];
-  items: string[];
+  argument: string;
 }): UseDeclaration;
 
 /**

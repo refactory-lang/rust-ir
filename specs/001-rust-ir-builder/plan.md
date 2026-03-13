@@ -5,18 +5,18 @@
 
 ## Summary
 
-Build a typed Rust IR builder library in TypeScript (ESM, strict mode) that provides discriminated-union IR nodes + factory functions for 7 Rust grammar node kinds, a standalone `render(node): string` function, and a `validate(source): ValidationResult` function backed by a bundled tree-sitter-rust parser. The library must run inside the Codemod JSSG runtime with zero runtime dependencies beyond `@codemod.com/jssg-types`.
+Build a typed Rust IR builder library in TypeScript (ESM, strict mode) that provides discriminated-union IR nodes + factory functions for 7 Rust grammar node kinds, a standalone `render(node): string` function, and a `validate(source): ValidationResult` function that calls `parse` from the JSSG runtime's `codemod:ast-grep` virtual module. The library has zero npm runtime dependencies and runs exclusively inside the Codemod JSSG runtime.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.x, strict mode, ESM (`"type": "module"`)
-**Primary Dependencies**: tree-sitter-rust (bundled ESM/WASM parser for `validate()`), `@codemod.com/jssg-types` (type source only, no runtime dep)
+**Primary Dependencies**: `@codemod.com/jssg-types` (devDep, TypeScript type declarations only); `codemod:ast-grep` (JSSG runtime virtual module — not an npm dep)
 **Storage**: N/A
-**Testing**: Vitest (ESM-native, runs outside JSSG)
+**Testing**: Vitest (ESM-native, runs outside JSSG); Vitest aliases `codemod:ast-grep` to `tests/__mocks__/ast-grep.ts` for unit tests
 **Target Platform**: Codemod JSSG runtime (ast-grep bindings via `codemod:ast-grep`); Node.js for tests
-**Project Type**: Library (ESM npm package)
+**Project Type**: Library (ESM, used by JSSG transforms)
 **Performance Goals**: Sub-millisecond render + validate for single IR nodes (typical transform output); not a bulk-processing system
-**Constraints**: No Node.js built-ins (`fs`, `path`, `child_process`), no native addons, ESM imports only, sole runtime dep is `@codemod.com/jssg-types`
+**Constraints**: No Node.js built-ins (`fs`, `path`, `child_process`), no native addons, ESM imports only, zero npm runtime dependencies
 **Scale/Scope**: 7 IR node kinds (struct, function, use, impl, if, macro, source_file); single-transform usage patterns
 
 ## Constitution Check
@@ -29,7 +29,7 @@ Build a typed Rust IR builder library in TypeScript (ESM, strict mode) that prov
 | II. Render-Then-Validate | Every IR node has `render()` output validated via `parse<Rust>` | ✅ PASS — all tests follow build → render → validate round-trip; negative test required per kind |
 | III. Test-First | TDD mandatory — tests written before implementation | ✅ PASS — tasks.md will sequence test files before implementation |
 | IV. Minimal Surface Area | Only 7 node kinds needed by active transforms | ✅ PASS — node set bounded by FR-001; no speculative additions |
-| V. JSSG Runtime Compatibility | ESM only, no Node.js built-ins, no native addons; integration test required | ✅ PASS — `validate()` bundles ESM tree-sitter-rust; integration test imports library inside a JSSG transform |
+| V. JSSG Runtime Compatibility | ESM only, no Node.js built-ins, no native addons; integration test required | ✅ PASS — `validate()` uses `parse` from `codemod:ast-grep` (JSSG virtual module, zero npm deps); integration test imports library inside a JSSG transform |
 
 **Post-Phase-1 re-check**: All gates remain PASS — data model and contracts introduce no new dependencies or abstractions beyond the 7 node kinds.
 

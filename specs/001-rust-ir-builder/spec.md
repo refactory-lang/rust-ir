@@ -132,7 +132,7 @@ A transform author builds a full Rust source file by composing multiple top-leve
 - What happens when a struct field type contains generic parameters (e.g., `Vec<String>`)? IR must preserve the full type string without escaping.
 - What happens when a function body is multi-line? The render must properly indent nested statements.
 - What happens when an identifier is a Rust keyword? The IR should not silently accept it — `validate()` will catch it via tree-sitter.
-- What happens when render is called on a node with missing required fields (e.g., struct with no name)? The builder should reject this at construction time via TypeScript types (compilation error), not at runtime.
+- What happens when render is called on a node with missing required fields (e.g., struct with no name)? The builder rejects this at construction time via TypeScript types (compilation error) **and** also throws a descriptive error at runtime — see FR-007 and the clarification below.
 
 ## Clarifications
 
@@ -140,7 +140,7 @@ A transform author builds a full Rust source file by composing multiple top-leve
 
 - Q: How should IR nodes be implemented (classes vs discriminated unions vs factory+closure)? → A: Discriminated union + factory functions — plain objects with a `kind` discriminant, standalone `render(node)` function.
 
-- Q: Should `validate()` depend on the JSSG runtime, or bundle its own tree-sitter-rust parser? → A: Standalone tree-sitter-rust — `validate()` bundles its own parser; JSSG compatibility is tested separately.
+- Q: Should `validate()` depend on the JSSG runtime, or bundle its own tree-sitter-rust parser? → A: JSSG runtime — `validate()` calls `parse` from the `codemod:ast-grep` virtual module provided by the JSSG runtime. No WASM bundling. Unit tests mock `codemod:ast-grep` via Vitest alias; JSSG compatibility is the single source of truth for real parse behaviour.
 
 - Q: How should the builder handle invalid or missing fields at runtime? → A: Throw error — builder functions throw a descriptive error if required fields are missing or invalid, in addition to compile-time checks.
 
@@ -155,9 +155,9 @@ A transform author builds a full Rust source file by composing multiple top-leve
 - **FR-001**: Library MUST export typed builder functions for each supported Rust node kind: `StructItem`, `FunctionItem`, `UseDeclaration`, `ImplItem`, `IfExpression`, `MacroInvocation`, `SourceFile`.
 - **FR-002**: Each builder MUST accept a configuration object whose fields mirror the tree-sitter-rust grammar for that node kind (per constitution principle I: Grammar Fidelity).
 - **FR-003**: A standalone `render(node: RustIrNode): string` function MUST accept any IR node variant and produce syntactically valid Rust source text.
-- **FR-004**: Library MUST export `validate(source: string): ValidationResult` that parses the source using a bundled tree-sitter-rust parser and reports any `ERROR` nodes found in the tree. JSSG runtime compatibility is verified via integration test (see SC-005).
+- **FR-004**: Library MUST export `validate(source: string): ValidationResult` that calls `parse("rust", source)` from the `codemod:ast-grep` JSSG runtime virtual module and reports any `ERROR` nodes found in the tree.
 - **FR-005**: Library MUST be importable in JSSG transforms via standard ESM `import` (per constitution principle V: JSSG Runtime Compatibility).
-- **FR-006**: Library MUST NOT have runtime dependencies beyond `@codemod.com/jssg-types`.
+- **FR-006**: Library MUST have zero npm runtime dependencies. `@codemod.com/jssg-types` is a devDependency only (TypeScript type declarations). `validate()` relies on `codemod:ast-grep`, a virtual module provided by the JSSG runtime — not an npm package.
 - **FR-007**: All IR node configurations MUST be expressible via TypeScript interfaces with required and optional fields — missing required fields MUST be caught at compile time, and builder functions MUST throw a descriptive error at runtime if required fields are missing or invalid.
 - **FR-008**: `render()` output MUST pass `validate()` for all supported node kinds when constructed with valid inputs.
 
@@ -175,4 +175,4 @@ A transform author builds a full Rust source file by composing multiple top-leve
 - **SC-002**: `validate()` correctly detects intentionally malformed Rust in 100% of negative test cases.
 - **SC-003**: TypeScript strict mode compiles with zero errors.
 - **SC-004**: An existing transform (`tier1-syntax.ts`) can be refactored to use the IR builder for struct emission, producing identical Rust output as the current string-concatenation approach.
-- **SC-005**: Library runs successfully inside the JSSG runtime (verified by an integration test that imports it in a JSSG transform and processes a fixture; `validate()` uses the bundled parser by default, but JSSG compatibility is required).
+- **SC-005**: Library runs successfully inside the JSSG runtime (verified by an integration test that imports the library in a JSSG transform, processes a fixture, and confirms `validate()` correctly uses the runtime's `codemod:ast-grep` parser).
