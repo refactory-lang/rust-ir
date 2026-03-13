@@ -9,14 +9,14 @@ Build a typed Rust IR builder library in TypeScript (ESM, strict mode) that prov
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x, strict mode, ESM (`"type": "module"`)  
-**Primary Dependencies**: tree-sitter-rust (bundled ESM/WASM parser for `validate()`), `@codemod.com/jssg-types` (type source only, no runtime dep)  
-**Storage**: N/A  
-**Testing**: Vitest (ESM-native, runs outside JSSG)  
-**Target Platform**: Codemod JSSG runtime (ast-grep bindings via `codemod:ast-grep`); Node.js for tests  
-**Project Type**: Library (ESM npm package)  
-**Performance Goals**: Sub-millisecond render + validate for single IR nodes (typical transform output); not a bulk-processing system  
-**Constraints**: No Node.js built-ins (`fs`, `path`, `child_process`), no native addons, ESM imports only, sole runtime dep is `@codemod.com/jssg-types`  
+**Language/Version**: TypeScript 5.x, strict mode, ESM (`"type": "module"`)
+**Primary Dependencies**: tree-sitter-rust (bundled ESM/WASM parser for `validate()`), `@codemod.com/jssg-types` (type source only, no runtime dep)
+**Storage**: N/A
+**Testing**: Vitest (ESM-native, runs outside JSSG)
+**Target Platform**: Codemod JSSG runtime (ast-grep bindings via `codemod:ast-grep`); Node.js for tests
+**Project Type**: Library (ESM npm package)
+**Performance Goals**: Sub-millisecond render + validate for single IR nodes (typical transform output); not a bulk-processing system
+**Constraints**: No Node.js built-ins (`fs`, `path`, `child_process`), no native addons, ESM imports only, sole runtime dep is `@codemod.com/jssg-types`
 **Scale/Scope**: 7 IR node kinds (struct, function, use, impl, if, macro, source_file); single-transform usage patterns
 
 ## Constitution Check

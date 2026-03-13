@@ -1,8 +1,8 @@
 # Feature Specification: Rust IR Builder
 
-**Feature Branch**: `feature/001-rust-ir-builder`  
-**Created**: 2025-07-19  
-**Status**: Draft  
+**Feature Branch**: `feature/001-rust-ir-builder`
+**Created**: 2025-07-19
+**Status**: Draft
 **Input**: User description: "Create a typed Rust IR builder for JSSG transforms — builds structured Rust AST nodes, renders to source, validates via tree-sitter parse"
 
 ## User Scenarios & Testing *(mandatory)*
