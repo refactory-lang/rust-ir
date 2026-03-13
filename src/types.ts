@@ -173,7 +173,7 @@ type ExpandNode<K extends RustNodeKind, Visited extends string[]> =
 // ---------------------------------------------------------------------------
 
 type BuilderInputValue<T> = T extends { kind: RustNodeKind }
-  ? T
+  ? T | string
   : T extends readonly (infer U)[]
     ? BuilderInputValue<U>[]
     : T extends RustTextBrand<string>
