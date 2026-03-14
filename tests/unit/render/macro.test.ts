@@ -5,7 +5,7 @@ import { macroInvocation } from "../../../src/nodes/macro.js";
 
 describe("macroInvocation() + render()", () => {
   it("renders format! invocation that validates ok", () => {
-    const node = macroInvocation({ macro: "format", tokens: '"hello {}", name' });
+    const node = macroInvocation({ macro: "format", children: '"hello {}", name' });
     const output = render(node);
     expect(output).toBe('format!("hello {}", name)');
     const vr = validate(output);
@@ -13,7 +13,7 @@ describe("macroInvocation() + render()", () => {
   });
 
   it("renders println! invocation that validates ok", () => {
-    const node = macroInvocation({ macro: "println", tokens: '"done"' });
+    const node = macroInvocation({ macro: "println", children: '"done"' });
     const output = render(node);
     expect(output).toBe('println!("done")');
     const vr = validate(output);
@@ -21,10 +21,10 @@ describe("macroInvocation() + render()", () => {
   });
 
   it("throws when macro name is empty", () => {
-    expect(() => macroInvocation({ macro: "", tokens: "x" })).toThrow(/macro/i);
+    expect(() => macroInvocation({ macro: "", children: "x" })).toThrow(/macro/i);
   });
 
-  it("throws when tokens is empty", () => {
-    expect(() => macroInvocation({ macro: "println", tokens: "" })).toThrow(/tokens/i);
+  it("throws when children is empty", () => {
+    expect(() => macroInvocation({ macro: "println", children: "" })).toThrow(/children/i);
   });
 });

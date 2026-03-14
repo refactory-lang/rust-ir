@@ -4,18 +4,13 @@ import { validate } from "../../../src/validate.js";
 import { structItem } from "../../../src/nodes/struct.js";
 
 describe("structItem() + render()", () => {
-  it("renders a named-field pub struct with derives that validates ok", () => {
+  it("renders a named-field pub struct that validates ok", () => {
     const node = structItem({
       name: "Guard",
-      fields: [
-        { name: "value", type: "i32" },
-        { name: "active", type: "bool" },
-      ],
-      derives: ["Debug", "Clone"],
-      visibility: "pub",
+      body: "    value: i32,\n    active: bool,",
+      children: ["pub"],
     });
     const output = render(node);
-    expect(output).toContain("#[derive(Debug, Clone)]");
     expect(output).toContain("pub struct Guard");
     expect(output).toContain("value: i32");
     expect(output).toContain("active: bool");
@@ -24,7 +19,7 @@ describe("structItem() + render()", () => {
   });
 
   it("renders a unit struct (no fields) that validates ok", () => {
-    const node = structItem({ name: "Sentinel", visibility: "pub" });
+    const node = structItem({ name: "Sentinel", children: ["pub"] });
     const output = render(node);
     expect(output).toContain("pub struct Sentinel;");
     expect(output).not.toContain("{");
@@ -33,7 +28,7 @@ describe("structItem() + render()", () => {
   });
 
   it("renders a private struct (no visibility) that validates ok", () => {
-    const node = structItem({ name: "Inner", fields: [{ name: "x", type: "f64" }] });
+    const node = structItem({ name: "Inner", body: "    x: f64," });
     const output = render(node);
     expect(output).not.toMatch(/^pub\s/);
     expect(output).toContain("struct Inner");

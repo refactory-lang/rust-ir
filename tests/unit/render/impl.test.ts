@@ -7,7 +7,8 @@ import { functionItem } from "../../../src/nodes/function.js";
 describe("implItem() + render()", () => {
   it("renders an inherent impl block with a method that validates ok", () => {
     const method = functionItem({ name: "new", body: "Self { value: 0 }", returnType: "Self" });
-    const node = implItem({ type: "Counter", methods: [method] });
+    const rendered = render(method).split('\n').map(line => '    ' + line).join('\n');
+    const node = implItem({ type: "Counter", body: rendered });
     const output = render(node);
     expect(output).toContain("impl Counter {");
     expect(output).toContain("fn new()");
@@ -17,8 +18,9 @@ describe("implItem() + render()", () => {
   });
 
   it("renders a trait impl (impl Drop for Guard) that validates ok", () => {
-    const dropFn = functionItem({ name: "drop", params: [{ name: "&mut self", type: "" }], body: "println!(\"dropped\");" });
-    const node = implItem({ type: "Guard", trait: "Drop", methods: [dropFn] });
+    const dropFn = functionItem({ name: "drop", parameters: "&mut self", body: "println!(\"dropped\");" });
+    const rendered = render(dropFn).split('\n').map(line => '    ' + line).join('\n');
+    const node = implItem({ type: "Guard", trait: "Drop", body: rendered });
     const output = render(node);
     expect(output).toContain("impl Drop for Guard {");
     expect(output).toContain("fn drop");

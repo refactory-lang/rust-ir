@@ -29,21 +29,21 @@ describe("JSSG transform fixture — rust-ir API compatibility", () => {
   });
 
   it("full source file pipeline: use + struct + impl — validates ok (SC-005)", () => {
+    const method = functionItem({
+      name: "new",
+      returnType: "Self",
+      body: "Self { entries: HashMap::new() }",
+      children: ["pub"],
+    });
+    const renderedMethod = render(method).split('\n').map(line => '    ' + line).join('\n');
     const node = sourceFile({
-      items: [
-        useDeclaration({ argument: "std::collections::HashMap" }),
-        structItem({ name: "Registry", fields: [{ name: "entries", type: "HashMap<String, u32>" }], visibility: "pub" }),
-        implItem({
+      children: [
+        render(useDeclaration({ argument: "std::collections::HashMap" })),
+        render(structItem({ name: "Registry", body: "    entries: HashMap<String, u32>,", children: ["pub"] })),
+        render(implItem({
           type: "Registry",
-          methods: [
-            functionItem({
-              name: "new",
-              returnType: "Self",
-              body: "Self { entries: HashMap::new() }",
-              visibility: "pub",
-            }),
-          ],
-        }),
+          body: renderedMethod,
+        })),
       ],
     });
     const output = render(node);
@@ -67,7 +67,7 @@ describe("JSSG transform fixture — rust-ir API compatibility", () => {
     // ifExpression
     expect(ifExpression({ condition: "true", consequence: "1" })).toMatchObject({ kind: "if_expression" });
     // macroInvocation
-    expect(macroInvocation({ macro: "vec", tokens: "1, 2, 3" })).toMatchObject({ kind: "macro_invocation" });
+    expect(macroInvocation({ macro: "vec", children: "1, 2, 3" })).toMatchObject({ kind: "macro_invocation" });
     // sourceFile (already tested above)
   });
 });

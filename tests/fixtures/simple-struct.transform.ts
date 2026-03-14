@@ -18,7 +18,7 @@ import { structItem, render, validate } from "../../src/index.js";
  */
 export function buildPublicStruct(name: string): string | null {
   if (!name) return null;
-  const node = structItem({ name, visibility: "pub" });
+  const node = structItem({ name, children: ["pub"] });
   const output = render(node);
   const result = validate(output);
   if (!result.ok) return null;

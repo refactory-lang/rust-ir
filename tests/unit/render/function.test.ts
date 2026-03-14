@@ -7,13 +7,10 @@ describe("functionItem() + render()", () => {
   it("renders a pub fn with params and return type that validates ok", () => {
     const node = functionItem({
       name: "add",
-      params: [
-        { name: "a", type: "i32" },
-        { name: "b", type: "i32" },
-      ],
+      parameters: "a: i32, b: i32",
       returnType: "i32",
       body: "a + b",
-      visibility: "pub",
+      children: ["pub"],
     });
     const output = render(node);
     expect(output).toContain("pub fn add");

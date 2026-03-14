@@ -26,14 +26,22 @@ export function render(node: RustIrNode): string {
   }
 }
 
+/** Render a value that may be an IR node or a plain string. */
+function renderChild(item: unknown): string {
+  if (typeof item === 'object' && item !== null && 'kind' in item) {
+    return render(item as RustIrNode);
+  }
+  return String(item);
+}
+
 // ---------------------------------------------------------------------------
 // source_file
 // ---------------------------------------------------------------------------
 
 function renderSourceFile(node: SourceFile): string {
   if (!node.children) return '';
-  // children is a branded string[] — each entry is a rendered item
-  return (node.children as unknown as string[]).map(s => s).join("\n\n");
+  const items = node.children as unknown as unknown[];
+  return items.map(renderChild).join("\n\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -51,7 +59,12 @@ function renderMacro(node: MacroInvocation): string {
 function renderIf(node: IfExpression): string {
   let output = `if ${node.condition} {\n    ${node.consequence}\n}`;
   if (node.alternative !== undefined) {
-    output += ` else {\n    ${node.alternative}\n}`;
+    const alt = String(node.alternative);
+    if (alt.startsWith('if ')) {
+      output += ` else ${alt}`;
+    } else {
+      output += ` else {\n    ${alt}\n}`;
+    }
   }
   return output;
 }
@@ -64,8 +77,25 @@ function renderImpl(node: ImplItem): string {
   const header = node.trait
     ? `impl ${node.trait} for ${node.type} {`
     : `impl ${node.type} {`;
-  const body = node.body ? String(node.body) : '';
-  return body.length > 0 ? `${header}\n${body}\n}` : `${header}\n}`;
+
+  if (!node.body) return `${header}\n}`;
+
+  const bodyVal = node.body as unknown;
+  let bodyStr: string;
+
+  if (Array.isArray(bodyVal)) {
+    bodyStr = (bodyVal as unknown[]).map(item => {
+      const text = renderChild(item);
+      return text.split('\n').map(line => '    ' + line).join('\n');
+    }).join('\n');
+  } else if (typeof bodyVal === 'object' && bodyVal !== null && 'kind' in bodyVal) {
+    const text = render(bodyVal as RustIrNode);
+    bodyStr = text.split('\n').map(line => '    ' + line).join('\n');
+  } else {
+    bodyStr = String(bodyVal);
+  }
+
+  return bodyStr.length > 0 ? `${header}\n${bodyStr}\n}` : `${header}\n}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,12 +122,9 @@ function renderFunction(node: FunctionItem): string {
 // ---------------------------------------------------------------------------
 
 function renderStruct(node: StructItem): string {
-  const lines: string[] = [];
   const vis = node.children ? `${(node.children as unknown as string[])[0]} ` : "";
   if (node.body) {
-    lines.push(`${vis}struct ${node.name} {\n${node.body}\n}`);
-  } else {
-    lines.push(`${vis}struct ${node.name};`);
+    return `${vis}struct ${node.name} {\n${node.body}\n}`;
   }
-  return lines.join("\n");
+  return `${vis}struct ${node.name};`;
 }

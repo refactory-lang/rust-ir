@@ -9,18 +9,23 @@ import { functionItem } from "../../../src/nodes/function.js";
 
 describe("sourceFile() + render()", () => {
   it("renders use + struct + impl with blank-line separation that validates ok", () => {
-    const items = [
-      useDeclaration({ argument: "std::fmt::Display" }),
-      structItem({ name: "Point", fields: [{ name: "x", type: "f64" }, { name: "y", type: "f64" }], visibility: "pub" }),
-      implItem({
+    const method = functionItem({
+      name: "fmt",
+      parameters: "&self, f: &mut fmt::Formatter",
+      returnType: "fmt::Result",
+      body: 'write!(f, "({}, {})", self.x, self.y)',
+    });
+    const renderedMethod = render(method).split('\n').map(line => '    ' + line).join('\n');
+    const children = [
+      render(useDeclaration({ argument: "std::fmt::Display" })),
+      render(structItem({ name: "Point", body: "    x: f64,\n    y: f64,", children: ["pub"] })),
+      render(implItem({
         type: "Point",
         trait: "Display",
-        methods: [
-          functionItem({ name: "fmt", params: [{ name: "&self", type: "" }, { name: "f", type: "&mut fmt::Formatter" }], returnType: "fmt::Result", body: 'write!(f, "({}, {})", self.x, self.y)' }),
-        ],
-      }),
+        body: renderedMethod,
+      })),
     ];
-    const node = sourceFile({ items });
+    const node = sourceFile({ children });
     const output = render(node);
     // Items are separated by exactly two newlines
     const parts = output.split("\n\n");
@@ -33,14 +38,14 @@ describe("sourceFile() + render()", () => {
   });
 
   it("renders a single item with no extra blank lines", () => {
-    const node = sourceFile({ items: [structItem({ name: "Solo" })] });
+    const node = sourceFile({ children: [render(structItem({ name: "Solo" }))] });
     const output = render(node);
     expect(output).not.toMatch(/\n\n/);
     const vr = validate(output);
     expect(vr.ok).toBe(true);
   });
 
-  it("throws when items array is empty", () => {
-    expect(() => sourceFile({ items: [] })).toThrow(/items/i);
+  it("throws when children array is empty", () => {
+    expect(() => sourceFile({ children: [] })).toThrow(/children/i);
   });
 });

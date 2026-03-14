@@ -8,7 +8,7 @@ describe("ifExpression() + render()", () => {
     const node = ifExpression({
       condition: "x > 0",
       consequence: "x",
-      elseClause: "-x",
+      alternative: "-x",
     });
     const output = render(node);
     expect(output).toContain("if x > 0 {");
@@ -19,14 +19,21 @@ describe("ifExpression() + render()", () => {
   });
 
   it("renders two else-if clauses without ERROR nodes", () => {
+    // Build nested if expressions compositionally
+    const innerIf = render(ifExpression({
+      condition: "x > 0",
+      consequence: "\"small\"",
+      alternative: "\"none\"",
+    }));
+    const middleIf = render(ifExpression({
+      condition: "x > 5",
+      consequence: "\"medium\"",
+      alternative: innerIf,
+    }));
     const node = ifExpression({
       condition: "x > 10",
       consequence: "\"big\"",
-      elseIfClauses: [
-        { condition: "x > 5", consequence: "\"medium\"" },
-        { condition: "x > 0", consequence: "\"small\"" },
-      ],
-      elseClause: "\"none\"",
+      alternative: middleIf,
     });
     const output = render(node);
     expect(output).toContain("else if x > 5 {");
