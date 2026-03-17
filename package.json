@@ -1,23 +1,28 @@
 {
-  "name": "rust-ir",
-  "version": "0.1.0",
-  "description": "Typed Rust IR builder for JSSG transforms",
-  "type": "module",
-  "main": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "scripts": {
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "@codemod.com/jssg-types": "latest",
-    "type-fest": "^5.4.4",
-    "typescript": "^5.4.0",
-    "vitest": "^1.6.0"
-  },
-  "files": [
-    "src"
-  ]
+	"name": "rust-ir",
+	"version": "0.1.0",
+	"description": "Typed Rust IR builder for JSSG transforms",
+	"files": [
+		"src"
+	],
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"test": "vitest run",
+		"typecheck": "tsgo --noEmit"
+	},
+	"devDependencies": {
+		"@codemod.com/jssg-types": "1.5.0",
+		"@typescript/native-preview": "7.0.0-dev.20260317.1",
+		"oxfmt": "^0.41.0",
+		"oxlint": "^1.56.0",
+		"type-fest": "^5.4.4",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.0",
+		"vitest": "^4.1.0"
+	},
+	"packageManager": "pnpm@10.32.1"
 }

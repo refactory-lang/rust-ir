@@ -3,11 +3,11 @@ export type { UseDeclaration, UseDeclarationConfig } from '../types.js';
 import type { UseDeclaration, UseDeclarationConfig } from '../types.js';
 
 export function useDeclaration(config: UseDeclarationConfig): UseDeclaration {
-  if (!config.argument || String(config.argument).trim().length === 0) {
-    throw new Error('useDeclaration: argument must be a non-empty string');
-  }
-  return {
-    kind: 'use_declaration',
-    argument: config.argument as UseDeclaration['argument']
-  };
+	if (!config.argument || String(config.argument).trim().length === 0) {
+		throw new Error('useDeclaration: argument must be a non-empty string');
+	}
+	return {
+		kind: 'use_declaration',
+		argument: config.argument as UseDeclaration['argument'],
+	};
 }

@@ -53,6 +53,7 @@ Otherwise, fall back to the default: execute the `{SCRIPT}` with `--json` to det
 6. Consider integration points and their test coverage
 
 **Rating Guidelines:**
+
 - 9-10: Critical functionality that could cause data loss, security issues, or system failures
 - 7-8: Important business logic that could cause user-facing errors
 - 5-6: Edge cases that could cause confusion or minor issues

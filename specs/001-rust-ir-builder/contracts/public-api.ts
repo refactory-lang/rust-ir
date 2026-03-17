@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------
 
 /** Rust visibility modifier. `undefined` = no modifier (crate-private). */
-export type Visibility = "pub" | undefined;
+export type Visibility = 'pub' | undefined;
 
 // ---------------------------------------------------------------------------
 // IR Node Kinds
@@ -26,10 +26,10 @@ export type Visibility = "pub" | undefined;
  * Maps to tree-sitter-rust `field_declaration`.
  */
 export interface FieldDeclaration {
-  /** Field identifier (e.g., `"host"`) */
-  name: string;
-  /** Raw Rust type string (e.g., `"String"`, `"Vec<u32>"`, `"&'a str"`) */
-  type: string;
+	/** Field identifier (e.g., `"host"`) */
+	name: string;
+	/** Raw Rust type string (e.g., `"String"`, `"Vec<u32>"`, `"&'a str"`) */
+	type: string;
 }
 
 /**
@@ -37,10 +37,10 @@ export interface FieldDeclaration {
  * Maps to tree-sitter-rust `parameter`.
  */
 export interface ParameterDeclaration {
-  /** Parameter identifier (e.g., `"input"`, `"self"`) */
-  name: string;
-  /** Raw Rust type string (e.g., `"&str"`, `"&mut Self"`) */
-  type: string;
+	/** Parameter identifier (e.g., `"input"`, `"self"`) */
+	name: string;
+	/** Raw Rust type string (e.g., `"&str"`, `"&mut Self"`) */
+	type: string;
 }
 
 /**
@@ -48,10 +48,10 @@ export interface ParameterDeclaration {
  * Corresponds to `else_clause` wrapping an `if_expression` in tree-sitter-rust.
  */
 export interface ElseIfClause {
-  /** Raw Rust boolean expression (e.g., `"x < 0"`) */
-  condition: string;
-  /** Raw Rust expression(s) for the block body (e.g., `"Err(\"negative\")"`) */
-  consequence: string;
+	/** Raw Rust boolean expression (e.g., `"x < 0"`) */
+	condition: string;
+	/** Raw Rust expression(s) for the block body (e.g., `"Err(\"negative\")"`) */
+	consequence: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -63,14 +63,14 @@ export interface ElseIfClause {
  * tree-sitter-rust node: `struct_item`
  */
 export interface StructItem {
-  readonly kind: "struct_item";
-  /** Struct identifier (e.g., `"Config"`) */
-  name: string;
-  /** Named fields — empty array → unit struct `Name;` */
-  fields: FieldDeclaration[];
-  /** Items in `#[derive(...)]` — empty array → no derive attribute */
-  derives: string[];
-  visibility: Visibility;
+	readonly kind: 'struct_item';
+	/** Struct identifier (e.g., `"Config"`) */
+	name: string;
+	/** Named fields — empty array → unit struct `Name;` */
+	fields: FieldDeclaration[];
+	/** Items in `#[derive(...)]` — empty array → no derive attribute */
+	derives: string[];
+	visibility: Visibility;
 }
 
 /**
@@ -78,16 +78,16 @@ export interface StructItem {
  * tree-sitter-rust node: `function_item`
  */
 export interface FunctionItem {
-  readonly kind: "function_item";
-  /** Function identifier (e.g., `"process"`) */
-  name: string;
-  /** Parameter list — empty array → `()` */
-  params: ParameterDeclaration[];
-  /** Return type string — `undefined` → omit `-> Type` clause */
-  returnType: string | undefined;
-  /** Raw Rust expression(s) for the block body */
-  body: string;
-  visibility: Visibility;
+	readonly kind: 'function_item';
+	/** Function identifier (e.g., `"process"`) */
+	name: string;
+	/** Parameter list — empty array → `()` */
+	params: ParameterDeclaration[];
+	/** Return type string — `undefined` → omit `-> Type` clause */
+	returnType: string | undefined;
+	/** Raw Rust expression(s) for the block body */
+	body: string;
+	visibility: Visibility;
 }
 
 /**
@@ -95,11 +95,11 @@ export interface FunctionItem {
  * tree-sitter-rust node: `use_declaration`
  */
 export interface UseDeclaration {
-  readonly kind: "use_declaration";
-  /** Path segments, e.g. `["std", "collections"]` */
-  path: string[];
-  /** Imported items, e.g. `["HashMap", "BTreeMap"]` */
-  items: string[];
+	readonly kind: 'use_declaration';
+	/** Path segments, e.g. `["std", "collections"]` */
+	path: string[];
+	/** Imported items, e.g. `["HashMap", "BTreeMap"]` */
+	items: string[];
 }
 
 /**
@@ -107,13 +107,13 @@ export interface UseDeclaration {
  * tree-sitter-rust node: `impl_item`
  */
 export interface ImplItem {
-  readonly kind: "impl_item";
-  /** Type being implemented (e.g., `"Guard"`) */
-  type: string;
-  /** Trait being implemented (e.g., `"Drop"`) — `undefined` → inherent impl */
-  trait: string | undefined;
-  /** Method definitions */
-  methods: FunctionItem[];
+	readonly kind: 'impl_item';
+	/** Type being implemented (e.g., `"Guard"`) */
+	type: string;
+	/** Trait being implemented (e.g., `"Drop"`) — `undefined` → inherent impl */
+	trait: string | undefined;
+	/** Method definitions */
+	methods: FunctionItem[];
 }
 
 /**
@@ -121,15 +121,15 @@ export interface ImplItem {
  * tree-sitter-rust node: `if_expression`
  */
 export interface IfExpression {
-  readonly kind: "if_expression";
-  /** Raw Rust boolean expression (e.g., `"x > 0"`) */
-  condition: string;
-  /** Raw Rust expression(s) for the block body */
-  consequence: string;
-  /** Chained `else if` branches */
-  elseIfClauses: ElseIfClause[];
-  /** Raw Rust expression(s) for the `else` block — `undefined` → no else */
-  elseClause: string | undefined;
+	readonly kind: 'if_expression';
+	/** Raw Rust boolean expression (e.g., `"x > 0"`) */
+	condition: string;
+	/** Raw Rust expression(s) for the block body */
+	consequence: string;
+	/** Chained `else if` branches */
+	elseIfClauses: ElseIfClause[];
+	/** Raw Rust expression(s) for the `else` block — `undefined` → no else */
+	elseClause: string | undefined;
 }
 
 /**
@@ -137,11 +137,11 @@ export interface IfExpression {
  * tree-sitter-rust node: `macro_invocation`
  */
 export interface MacroInvocation {
-  readonly kind: "macro_invocation";
-  /** Macro name without `!` (e.g., `"format"`, `"vec"`, `"println"`) */
-  macro: string;
-  /** Raw token tree content (e.g., `'"hello {}", name'`) */
-  tokens: string;
+	readonly kind: 'macro_invocation';
+	/** Macro name without `!` (e.g., `"format"`, `"vec"`, `"println"`) */
+	macro: string;
+	/** Raw token tree content (e.g., `'"hello {}", name'`) */
+	tokens: string;
 }
 
 /**
@@ -149,9 +149,9 @@ export interface MacroInvocation {
  * tree-sitter-rust node: `source_file`
  */
 export interface SourceFile {
-  readonly kind: "source_file";
-  /** Top-level IR nodes in declaration order */
-  items: RustIrNode[];
+	readonly kind: 'source_file';
+	/** Top-level IR nodes in declaration order */
+	items: RustIrNode[];
 }
 
 /**
@@ -159,13 +159,13 @@ export interface SourceFile {
  * Exhaustive switch on `node.kind` is guaranteed by TypeScript.
  */
 export type RustIrNode =
-  | StructItem
-  | FunctionItem
-  | UseDeclaration
-  | ImplItem
-  | IfExpression
-  | MacroInvocation
-  | SourceFile;
+	| StructItem
+	| FunctionItem
+	| UseDeclaration
+	| ImplItem
+	| IfExpression
+	| MacroInvocation
+	| SourceFile;
 
 // ---------------------------------------------------------------------------
 // Validation
@@ -179,8 +179,8 @@ export type RustIrNode =
  *                 byte offset and the node kind string.
  */
 export type ValidationResult =
-  | { ok: true }
-  | { ok: false; errors: Array<{ offset: number; kind: string }> };
+	| { ok: true }
+	| { ok: false; errors: Array<{ offset: number; kind: string }> };
 
 // ---------------------------------------------------------------------------
 // Factory functions  (exported from `src/index.ts`)
@@ -199,10 +199,10 @@ export type ValidationResult =
  * });
  */
 export declare function structItem(config: {
-  name: string;
-  fields?: FieldDeclaration[];
-  derives?: string[];
-  visibility?: Visibility;
+	name: string;
+	fields?: FieldDeclaration[];
+	derives?: string[];
+	visibility?: Visibility;
 }): StructItem;
 
 /**
@@ -220,11 +220,11 @@ export declare function structItem(config: {
  * });
  */
 export declare function functionItem(config: {
-  name: string;
-  params?: ParameterDeclaration[];
-  returnType?: string;
-  body: string;
-  visibility?: Visibility;
+	name: string;
+	params?: ParameterDeclaration[];
+	returnType?: string;
+	body: string;
+	visibility?: Visibility;
 }): FunctionItem;
 
 /**
@@ -235,9 +235,7 @@ export declare function functionItem(config: {
  * @example
  * const node = useDeclaration({ argument: "std::collections::HashMap" });
  */
-export declare function useDeclaration(config: {
-  argument: string;
-}): UseDeclaration;
+export declare function useDeclaration(config: { argument: string }): UseDeclaration;
 
 /**
  * Construct an `ImplItem` IR node.
@@ -252,9 +250,9 @@ export declare function useDeclaration(config: {
  * });
  */
 export declare function implItem(config: {
-  type: string;
-  trait?: string;
-  methods?: FunctionItem[];
+	type: string;
+	trait?: string;
+	methods?: FunctionItem[];
 }): ImplItem;
 
 /**
@@ -270,10 +268,10 @@ export declare function implItem(config: {
  * });
  */
 export declare function ifExpression(config: {
-  condition: string;
-  consequence: string;
-  elseIfClauses?: ElseIfClause[];
-  elseClause?: string;
+	condition: string;
+	consequence: string;
+	elseIfClauses?: ElseIfClause[];
+	elseClause?: string;
 }): IfExpression;
 
 /**
@@ -284,10 +282,7 @@ export declare function ifExpression(config: {
  * @example
  * const node = macroInvocation({ macro: "format", tokens: '"hello {}", name' });
  */
-export declare function macroInvocation(config: {
-  macro: string;
-  tokens: string;
-}): MacroInvocation;
+export declare function macroInvocation(config: { macro: string; tokens: string }): MacroInvocation;
 
 /**
  * Construct a `SourceFile` IR node composing multiple top-level nodes.
@@ -297,9 +292,7 @@ export declare function macroInvocation(config: {
  * @example
  * const file = sourceFile({ items: [useDecl, structNode, implNode] });
  */
-export declare function sourceFile(config: {
-  items: RustIrNode[];
-}): SourceFile;
+export declare function sourceFile(config: { items: RustIrNode[] }): SourceFile;
 
 // ---------------------------------------------------------------------------
 // Core operations  (exported from `src/index.ts`)

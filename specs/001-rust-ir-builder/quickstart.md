@@ -16,6 +16,7 @@ npm install rust-ir
 ```
 
 **Requirements**:
+
 - ESM project (`"type": "module"` in `package.json`)
 - TypeScript strict mode (zero-error target)
 
@@ -26,16 +27,16 @@ npm install rust-ir
 ### 1. Build and render a struct
 
 ```ts
-import { structItem, render, validate } from "rust-ir";
+import { structItem, render, validate } from 'rust-ir';
 
 const node = structItem({
-  name: "Config",
-  fields: [
-    { name: "host", type: "String" },
-    { name: "port", type: "u16" },
-  ],
-  derives: ["Debug", "Clone", "PartialEq"],
-  visibility: "pub",
+	name: 'Config',
+	fields: [
+		{ name: 'host', type: 'String' },
+		{ name: 'port', type: 'u16' },
+	],
+	derives: ['Debug', 'Clone', 'PartialEq'],
+	visibility: 'pub',
 });
 
 const src = render(node);
@@ -56,14 +57,14 @@ const result = validate(src);
 ### 2. Build and render a function
 
 ```ts
-import { functionItem, render, validate } from "rust-ir";
+import { functionItem, render, validate } from 'rust-ir';
 
 const node = functionItem({
-  name: "process",
-  params: [{ name: "input", type: "&str" }],
-  returnType: "String",
-  body: "input.to_string()",
-  visibility: "pub",
+	name: 'process',
+	params: [{ name: 'input', type: '&str' }],
+	returnType: 'String',
+	body: 'input.to_string()',
+	visibility: 'pub',
 });
 
 const src = render(node);
@@ -82,18 +83,18 @@ const result = validate(src);
 ### 3. Build a `use` declaration
 
 ```ts
-import { useDeclaration, render } from "rust-ir";
+import { useDeclaration, render } from 'rust-ir';
 
 const node = useDeclaration({
-  path: ["std", "collections"],
-  items: ["HashMap", "BTreeMap"],
+	path: ['std', 'collections'],
+	items: ['HashMap', 'BTreeMap'],
 });
 
 render(node);
 // → "use std::collections::{HashMap, BTreeMap};"
 
 // Single item — no braces:
-render(useDeclaration({ path: ["std", "fmt"], items: ["Write"] }));
+render(useDeclaration({ path: ['std', 'fmt'], items: ['Write'] }));
 // → "use std::fmt::Write;"
 ```
 
@@ -102,18 +103,18 @@ render(useDeclaration({ path: ["std", "fmt"], items: ["Write"] }));
 ### 4. Build an impl block (with trait)
 
 ```ts
-import { implItem, functionItem, render } from "rust-ir";
+import { implItem, functionItem, render } from 'rust-ir';
 
 const dropMethod = functionItem({
-  name: "drop",
-  params: [{ name: "self", type: "&mut Self" }],
-  body: "// cleanup",
+	name: 'drop',
+	params: [{ name: 'self', type: '&mut Self' }],
+	body: '// cleanup',
 });
 
 const node = implItem({
-  type: "Guard",
-  trait: "Drop",
-  methods: [dropMethod],
+	type: 'Guard',
+	trait: 'Drop',
+	methods: [dropMethod],
 });
 
 const src = render(node);
@@ -131,13 +132,13 @@ impl Drop for Guard {
 ### 5. Build an if / else-if / else expression
 
 ```ts
-import { ifExpression, render } from "rust-ir";
+import { ifExpression, render } from 'rust-ir';
 
 const node = ifExpression({
-  condition: "x > 0",
-  consequence: "Ok(x)",
-  elseIfClauses: [{ condition: "x == 0", consequence: "Ok(0)" }],
-  elseClause: 'Err("negative")',
+	condition: 'x > 0',
+	consequence: 'Ok(x)',
+	elseIfClauses: [{ condition: 'x == 0', consequence: 'Ok(0)' }],
+	elseClause: 'Err("negative")',
 });
 
 render(node);
@@ -157,11 +158,11 @@ if x > 0 {
 ### 6. Build a macro invocation
 
 ```ts
-import { macroInvocation, render } from "rust-ir";
+import { macroInvocation, render } from 'rust-ir';
 
 const node = macroInvocation({
-  macro: "format",
-  tokens: '"hello {}", name',
+	macro: 'format',
+	tokens: '"hello {}", name',
 });
 
 render(node);
@@ -173,14 +174,21 @@ render(node);
 ### 7. Compose a source file
 
 ```ts
-import { sourceFile, useDeclaration, structItem, implItem, render, validate } from "rust-ir";
+import { sourceFile, useDeclaration, structItem, implItem, render, validate } from 'rust-ir';
 
 const file = sourceFile({
-  items: [
-    useDeclaration({ path: ["std", "fmt"], items: ["Display", "Formatter"] }),
-    structItem({ name: "Point", fields: [{ name: "x", type: "f64" }, { name: "y", type: "f64" }], derives: ["Debug"] }),
-    implItem({ type: "Point", methods: [] }),
-  ],
+	items: [
+		useDeclaration({ path: ['std', 'fmt'], items: ['Display', 'Formatter'] }),
+		structItem({
+			name: 'Point',
+			fields: [
+				{ name: 'x', type: 'f64' },
+				{ name: 'y', type: 'f64' },
+			],
+			derives: ['Debug'],
+		}),
+		implItem({ type: 'Point', methods: [] }),
+	],
 });
 
 const src = render(file);
@@ -195,17 +203,17 @@ const result = validate(src);
 Builder functions throw a descriptive `Error` at runtime if required fields are missing or invalid:
 
 ```ts
-import { structItem } from "rust-ir";
+import { structItem } from 'rust-ir';
 
-structItem({ name: "" });
+structItem({ name: '' });
 // throws: Error: structItem: 'name' must be a non-empty string
 ```
 
 Missing required fields are also caught at **compile time** by TypeScript:
 
 ```ts
-structItem({});        // TS error: Property 'name' is missing
-functionItem({ name: "f" }); // TS error: Property 'body' is missing
+structItem({}); // TS error: Property 'name' is missing
+functionItem({ name: 'f' }); // TS error: Property 'body' is missing
 ```
 
 ---
@@ -215,14 +223,14 @@ functionItem({ name: "f" }); // TS error: Property 'body' is missing
 `validate()` parses rendered Rust using the **bundled tree-sitter-rust WASM parser** (no separate install required):
 
 ```ts
-import { validate } from "rust-ir";
+import { validate } from 'rust-ir';
 
 // Valid source
-validate("pub struct Empty;");
+validate('pub struct Empty;');
 // → { ok: true }
 
 // Invalid source
-validate("pub struct {");
+validate('pub struct {');
 // → { ok: false, errors: [{ offset: 11, kind: "ERROR" }] }
 ```
 
@@ -232,15 +240,15 @@ validate("pub struct {");
 
 ```ts
 // my-transform.ts  (runs inside Codemod JSSG runtime)
-import type { FileContext } from "@codemod.com/jssg-types";
-import { structItem, render, validate } from "rust-ir";
+import type { FileContext } from '@codemod.com/jssg-types';
+import { structItem, render, validate } from 'rust-ir';
 
 export function transform(file: FileContext) {
-  const node = structItem({ name: "Config", fields: [{ name: "value", type: "i32" }] });
-  const src = render(node);
-  const result = validate(src);
-  if (!result.ok) throw new Error(`IR validation failed: ${JSON.stringify(result.errors)}`);
-  file.write(src);
+	const node = structItem({ name: 'Config', fields: [{ name: 'value', type: 'i32' }] });
+	const src = render(node);
+	const result = validate(src);
+	if (!result.ok) throw new Error(`IR validation failed: ${JSON.stringify(result.errors)}`);
+	file.write(src);
 }
 ```
 
@@ -253,15 +261,17 @@ The library uses only ESM imports compatible with `codemod:ast-grep` and has no 
 All IR node types are exported. Use them for typed intermediate variables:
 
 ```ts
-import type { StructItem, FunctionItem, RustIrNode } from "rust-ir";
+import type { StructItem, FunctionItem, RustIrNode } from 'rust-ir';
 
 const nodes: RustIrNode[] = [];
 // TypeScript will enforce exhaustive switch on `node.kind`
 for (const node of nodes) {
-  switch (node.kind) {
-    case "struct_item": /* StructItem */ break;
-    case "function_item": /* FunctionItem */ break;
-    // ... all 7 kinds
-  }
+	switch (node.kind) {
+		case 'struct_item':
+			/* StructItem */ break;
+		case 'function_item':
+			/* FunctionItem */ break;
+		// ... all 7 kinds
+	}
 }
 ```

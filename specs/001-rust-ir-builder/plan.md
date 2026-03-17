@@ -21,15 +21,15 @@ Build a typed Rust IR builder library in TypeScript (ESM, strict mode) that prov
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-| Principle | Gate | Status |
-|-----------|------|--------|
-| I. Grammar Fidelity | Every IR node kind maps 1:1 to a tree-sitter-rust grammar node type; field names mirror the grammar | ✅ PASS — node kinds chosen directly from tree-sitter-rust grammar (struct_item, function_item, use_declaration, impl_item, if_expression, macro_invocation, source_file) |
-| II. Render-Then-Validate | Every IR node has `render()` output validated via `parse<Rust>` | ✅ PASS — all tests follow build → render → validate round-trip; negative test required per kind |
-| III. Test-First | TDD mandatory — tests written before implementation | ✅ PASS — tasks.md will sequence test files before implementation |
-| IV. Minimal Surface Area | Only 7 node kinds needed by active transforms | ✅ PASS — node set bounded by FR-001; no speculative additions |
-| V. JSSG Runtime Compatibility | ESM only, no Node.js built-ins, no native addons; integration test required | ✅ PASS — `validate()` uses `parse` from `codemod:ast-grep` (JSSG virtual module, zero npm deps); integration test imports library inside a JSSG transform |
+| Principle                     | Gate                                                                                                | Status                                                                                                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I. Grammar Fidelity           | Every IR node kind maps 1:1 to a tree-sitter-rust grammar node type; field names mirror the grammar | ✅ PASS — node kinds chosen directly from tree-sitter-rust grammar (struct_item, function_item, use_declaration, impl_item, if_expression, macro_invocation, source_file) |
+| II. Render-Then-Validate      | Every IR node has `render()` output validated via `parse<Rust>`                                     | ✅ PASS — all tests follow build → render → validate round-trip; negative test required per kind                                                                          |
+| III. Test-First               | TDD mandatory — tests written before implementation                                                 | ✅ PASS — tasks.md will sequence test files before implementation                                                                                                         |
+| IV. Minimal Surface Area      | Only 7 node kinds needed by active transforms                                                       | ✅ PASS — node set bounded by FR-001; no speculative additions                                                                                                            |
+| V. JSSG Runtime Compatibility | ESM only, no Node.js built-ins, no native addons; integration test required                         | ✅ PASS — `validate()` uses `parse` from `codemod:ast-grep` (JSSG virtual module, zero npm deps); integration test imports library inside a JSSG transform                |
 
 **Post-Phase-1 re-check**: All gates remain PASS — data model and contracts introduce no new dependencies or abstractions beyond the 7 node kinds.
 

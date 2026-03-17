@@ -3,15 +3,15 @@ export type { FunctionItem, FunctionItemConfig } from '../types.js';
 import type { FunctionItem, FunctionItemConfig } from '../types.js';
 
 export function functionItem(config: FunctionItemConfig): FunctionItem {
-  if (!config.name) throw new Error('functionItem: name must be a non-empty string');
-  if (!config.body) throw new Error('functionItem: body must be a non-empty string');
-  return {
-    kind: 'function_item',
-    name: config.name as FunctionItem['name'],
-    parameters: (config.parameters ?? '') as FunctionItem['parameters'],
-    returnType: config.returnType as FunctionItem['returnType'],
-    body: config.body as FunctionItem['body'],
-    typeParameters: config.typeParameters as FunctionItem['typeParameters'],
-    children: config.children as FunctionItem['children'],
-  };
+	if (!config.name) throw new Error('functionItem: name must be a non-empty string');
+	if (!config.body) throw new Error('functionItem: body must be a non-empty string');
+	return {
+		kind: 'function_item',
+		name: config.name as FunctionItem['name'],
+		parameters: (config.parameters ?? '') as FunctionItem['parameters'],
+		returnType: config.returnType as FunctionItem['returnType'],
+		body: config.body as FunctionItem['body'],
+		typeParameters: config.typeParameters as FunctionItem['typeParameters'],
+		children: config.children as FunctionItem['children'],
+	};
 }

@@ -13,7 +13,14 @@
 
 import type RustTypes from '@codemod.com/jssg-types/langs/rust';
 import type { Kinds } from '@codemod.com/jssg-types/main';
-import type { CamelCase, OptionalKeysOf, RequiredKeysOf, SetOptional, Simplify, SimplifyDeep } from 'type-fest';
+import type {
+	CamelCase,
+	OptionalKeysOf,
+	RequiredKeysOf,
+	SetOptional,
+	Simplify,
+	SimplifyDeep,
+} from 'type-fest';
 
 // ---------------------------------------------------------------------------
 // Grammar primitives
@@ -24,22 +31,22 @@ export type RustNodeKind = keyof RustGrammar & string;
 export type RustNamedKind = Kinds<RustGrammar>;
 
 type RustTextBrand<K extends string> = string & {
-  readonly __rustKinds: K;
+	readonly __rustKinds: K;
 };
 
 type GrammarTypeRef = {
-  readonly type: string;
+	readonly type: string;
 };
 
 type GrammarSlotInfo = {
-  readonly multiple: boolean;
-  readonly required: boolean;
-  readonly types: readonly GrammarTypeRef[];
+	readonly multiple: boolean;
+	readonly required: boolean;
+	readonly types: readonly GrammarTypeRef[];
 };
 
 type SlotKinds<Info> = Info extends { types: infer Types extends readonly GrammarTypeRef[] }
-  ? Extract<Types[number]['type'], string>
-  : never;
+	? Extract<Types[number]['type'], string>
+	: never;
 
 // ---------------------------------------------------------------------------
 // Cycle-detected recursion  (visited-set pattern)
@@ -52,10 +59,14 @@ type SlotKinds<Info> = Info extends { types: infer Types extends readonly Gramma
 // ---------------------------------------------------------------------------
 
 /** Check if string literal T is already in the Visited tuple. */
-type Contains<Visited extends string[], T extends string> =
-  Visited extends [infer Head extends string, ...infer Rest extends string[]]
-    ? Head extends T ? true : Contains<Rest, T>
-    : false;
+type Contains<Visited extends string[], T extends string> = Visited extends [
+	infer Head extends string,
+	...infer Rest extends string[],
+]
+	? Head extends T
+		? true
+		: Contains<Rest, T>
+	: false;
 
 /** Branded-string leaf for a single kind. */
 type LeafBrand<K extends string> = RustTextBrand<K>;
@@ -64,14 +75,13 @@ type LeafBrand<K extends string> = RustTextBrand<K>;
  * Expand a single child kind into a structured node or a branded-string leaf.
  * Uses the visited set for cycle detection.
  */
-type ExpandOneKind<K extends string, Visited extends string[]> =
-  K extends RustNodeKind
-    ? RustGrammar[K] extends { fields: object }
-      ? Contains<Visited, K> extends true
-        ? LeafBrand<K>           // cycle detected → stop
-        : ExpandNode<K, Visited> // expand structurally
-      : LeafBrand<K>             // no fields → leaf
-    : LeafBrand<K>;              // not a grammar node → leaf
+type ExpandOneKind<K extends string, Visited extends string[]> = K extends RustNodeKind
+	? RustGrammar[K] extends { fields: object }
+		? Contains<Visited, K> extends true
+			? LeafBrand<K> // cycle detected → stop
+			: ExpandNode<K, Visited> // expand structurally
+		: LeafBrand<K> // no fields → leaf
+	: LeafBrand<K>; // not a grammar node → leaf
 
 /**
  * Expand a grammar slot into structured nodes, stopping at cycles.
@@ -81,40 +91,41 @@ type ExpandOneKind<K extends string, Visited extends string[]> =
  * expand into structured objects while abstract supertypes without
  * `fields` become branded-string leaves.
  */
-type ExpandSlot<Info, Visited extends string[]> =
-  Info extends { multiple: true }
-    ? ExpandOneKind<SlotKinds<Info>, Visited>[]
-    : ExpandOneKind<SlotKinds<Info>, Visited>;
+type ExpandSlot<Info, Visited extends string[]> = Info extends { multiple: true }
+	? ExpandOneKind<SlotKinds<Info>, Visited>[]
+	: ExpandOneKind<SlotKinds<Info>, Visited>;
 
 // ---------------------------------------------------------------------------
 // Grammar field extraction
 // ---------------------------------------------------------------------------
 
 type RustFieldMap<K extends RustNodeKind> = RustGrammar[K] extends { fields: infer Fields }
-  ? Fields
-  : never;
+	? Fields
+	: never;
 
 type RustFieldName<K extends RustNodeKind> = keyof RustFieldMap<K> & string;
 
-type RustFieldInfo<
-  K extends RustNodeKind,
-  F extends RustFieldName<K>
-> = Extract<RustFieldMap<K>[F], GrammarSlotInfo>;
+type RustFieldInfo<K extends RustNodeKind, F extends RustFieldName<K>> = Extract<
+	RustFieldMap<K>[F],
+	GrammarSlotInfo
+>;
 
 type RequiredRustFieldName<K extends RustNodeKind> = {
-  [F in RustFieldName<K>]: RustFieldInfo<K, F>['required'] extends true ? F : never;
+	[F in RustFieldName<K>]: RustFieldInfo<K, F>['required'] extends true ? F : never;
 }[RustFieldName<K>];
 
-type OptionalRustFieldName<K extends RustNodeKind> = Exclude<RustFieldName<K>, RequiredRustFieldName<K>>;
+type OptionalRustFieldName<K extends RustNodeKind> = Exclude<
+	RustFieldName<K>,
+	RequiredRustFieldName<K>
+>;
 
-type RustFieldKinds<
-  K extends RustNodeKind,
-  F extends RustFieldName<K>
-> = SlotKinds<RustFieldInfo<K, F>>;
+type RustFieldKinds<K extends RustNodeKind, F extends RustFieldName<K>> = SlotKinds<
+	RustFieldInfo<K, F>
+>;
 
 type RustChildrenInfo<K extends RustNodeKind> = RustGrammar[K] extends { children: infer Children }
-  ? Extract<Children, GrammarSlotInfo>
-  : never;
+	? Extract<Children, GrammarSlotInfo>
+	: never;
 
 // ---------------------------------------------------------------------------
 // Ergonomic alias map — per-kind field rename overrides
@@ -123,21 +134,18 @@ type RustChildrenInfo<K extends RustNodeKind> = RustGrammar[K] extends { childre
 // ---------------------------------------------------------------------------
 
 type FieldAliasMap = {
-  parameter: { pattern: 'name' };
+	parameter: { pattern: 'name' };
 };
 
 /**
  * Resolve the output key for a given (kind, field_name) pair.
  * If FieldAliasMap has an entry, use the alias; otherwise CamelCase.
  */
-type ResolveFieldKey<
-  K extends RustNodeKind,
-  F extends string
-> = K extends keyof FieldAliasMap
-  ? F extends keyof FieldAliasMap[K]
-    ? FieldAliasMap[K][F] & string
-    : CamelCase<F>
-  : CamelCase<F>;
+type ResolveFieldKey<K extends RustNodeKind, F extends string> = K extends keyof FieldAliasMap
+	? F extends keyof FieldAliasMap[K]
+		? FieldAliasMap[K][F] & string
+		: CamelCase<F>
+	: CamelCase<F>;
 
 // ---------------------------------------------------------------------------
 // Grammar-derived node shapes  (CamelCase keys + alias map)
@@ -147,64 +155,76 @@ type ResolveFieldKey<
 // ---------------------------------------------------------------------------
 
 type DerivedNodeFields<K extends RustNodeKind, Visited extends string[]> = {
-  [F in RequiredRustFieldName<K> as ResolveFieldKey<K, F>]: ExpandSlot<RustFieldInfo<K, F>, Visited>;
+	[F in RequiredRustFieldName<K> as ResolveFieldKey<K, F>]: ExpandSlot<
+		RustFieldInfo<K, F>,
+		Visited
+	>;
 } & {
-  [F in OptionalRustFieldName<K> as ResolveFieldKey<K, F>]?: ExpandSlot<RustFieldInfo<K, F>, Visited>;
+	[F in OptionalRustFieldName<K> as ResolveFieldKey<K, F>]?: ExpandSlot<
+		RustFieldInfo<K, F>,
+		Visited
+	>;
 };
 
-type DerivedNodeChildren<K extends RustNodeKind, Visited extends string[]> = [RustChildrenInfo<K>] extends [never]
-  ? {}
-  : RustChildrenInfo<K>['required'] extends true
-    ? { children: ExpandSlot<RustChildrenInfo<K>, Visited> }
-    : { children?: ExpandSlot<RustChildrenInfo<K>, Visited> };
+type DerivedNodeChildren<K extends RustNodeKind, Visited extends string[]> = [
+	RustChildrenInfo<K>,
+] extends [never]
+	? {}
+	: RustChildrenInfo<K>['required'] extends true
+		? { children: ExpandSlot<RustChildrenInfo<K>, Visited> }
+		: { children?: ExpandSlot<RustChildrenInfo<K>, Visited> };
 
-type DerivedNodeShape<K extends RustNodeKind, Visited extends string[] = []> =
-  DerivedNodeFields<K, [...Visited, K]> & DerivedNodeChildren<K, [...Visited, K]>;
+type DerivedNodeShape<K extends RustNodeKind, Visited extends string[] = []> = DerivedNodeFields<
+	K,
+	[...Visited, K]
+> &
+	DerivedNodeChildren<K, [...Visited, K]>;
 
 /**
  * Recursively expanded grammar node.  Used by ExpandSlot to build
  * child structures — carries `kind` + all grammar-derived fields.
  */
-type ExpandNode<K extends RustNodeKind, Visited extends string[]> =
-  Readonly<{ kind: K }> & DerivedNodeShape<K, Visited>;
+type ExpandNode<K extends RustNodeKind, Visited extends string[]> = Readonly<{ kind: K }> &
+	DerivedNodeShape<K, Visited>;
 
 // ---------------------------------------------------------------------------
 // Builder input helpers
 // ---------------------------------------------------------------------------
 
 type BuilderInputValue<T> = T extends { kind: RustNodeKind }
-  ? T | string
-  : T extends readonly (infer U)[]
-    ? BuilderInputValue<U>[]
-    : T extends RustTextBrand<string>
-      ? string
-    : T extends string
-      ? string extends T
-        ? string
-        : T
-      : T extends object
-        ? { [K in keyof T]: BuilderInputValue<T[K]> }
-        : T;
+	? T | string
+	: T extends readonly (infer U)[]
+		? BuilderInputValue<U>[]
+		: T extends RustTextBrand<string>
+			? string
+			: T extends string
+				? string extends T
+					? string
+					: T
+				: T extends object
+					? { [K in keyof T]: BuilderInputValue<T[K]> }
+					: T;
 
 // Hand-rolled key helpers for BuilderInputValue only.
 type OptionalKeyOf<T> = {
-  [K in keyof T]-?: {} extends Pick<T, K> ? K : never;
+	[K in keyof T]-?: {} extends Pick<T, K> ? K : never;
 }[keyof T];
 
 type RequiredKeyOf<T> = Exclude<keyof T, OptionalKeyOf<T>>;
 
 export type RustNodeText<K extends RustNodeKind> = RustTextBrand<K>;
 
-export type RustFieldText<
-  K extends RustNodeKind,
-  F extends RustFieldName<K>
-> = RustTextBrand<RustFieldKinds<K, F>>;
+export type RustFieldText<K extends RustNodeKind, F extends RustFieldName<K>> = RustTextBrand<
+	RustFieldKinds<K, F>
+>;
 
-export type NodeBuilderInput<T extends { kind: RustNodeKind }> = Simplify<{
-  [K in Exclude<Extract<RequiredKeysOf<T>, keyof T>, 'kind'>]: BuilderInputValue<T[K]>;
-} & {
-  [K in Exclude<Extract<OptionalKeysOf<T>, keyof T>, 'kind'>]?: BuilderInputValue<T[K]>;
-}>;
+export type NodeBuilderInput<T extends { kind: RustNodeKind }> = Simplify<
+	{
+		[K in Exclude<Extract<RequiredKeysOf<T>, keyof T>, 'kind'>]: BuilderInputValue<T[K]>;
+	} & {
+		[K in Exclude<Extract<OptionalKeysOf<T>, keyof T>, 'kind'>]?: BuilderInputValue<T[K]>;
+	}
+>;
 
 /**
  * Grammar-derived field names that get builder defaults (empty arrays,
@@ -212,30 +232,30 @@ export type NodeBuilderInput<T extends { kind: RustNodeKind }> = Simplify<{
  * grammar field names or alias-map overrides.
  */
 export type DefaultableBuilderFieldName =
-  | 'body'
-  | 'typeParameters'
-  | 'children'
-  | 'returnType'
-  | 'parameters'
-  | 'trait'
-  | 'alternative';
+	| 'body'
+	| 'typeParameters'
+	| 'children'
+	| 'returnType'
+	| 'parameters'
+	| 'trait'
+	| 'alternative';
 
 type DefaultableKeys<T extends { kind: RustNodeKind }> = Extract<
-  keyof NodeBuilderInput<T>,
-  DefaultableBuilderFieldName
+	keyof NodeBuilderInput<T>,
+	DefaultableBuilderFieldName
 >;
 
 export type BuilderConfig<
-  T extends { kind: RustNodeKind },
-  OptionalKeys extends keyof NodeBuilderInput<T> = DefaultableKeys<T>
+	T extends { kind: RustNodeKind },
+	OptionalKeys extends keyof NodeBuilderInput<T> = DefaultableKeys<T>,
 > = Simplify<
-  SetOptional<
-    NodeBuilderInput<T>,
-    Extract<
-      OptionalKeys | Extract<OptionalKeysOf<NodeBuilderInput<T>>, keyof NodeBuilderInput<T>>,
-      keyof NodeBuilderInput<T>
-    >
-  >
+	SetOptional<
+		NodeBuilderInput<T>,
+		Extract<
+			OptionalKeys | Extract<OptionalKeysOf<NodeBuilderInput<T>>, keyof NodeBuilderInput<T>>,
+			keyof NodeBuilderInput<T>
+		>
+	>
 >;
 
 // ---------------------------------------------------------------------------
@@ -245,10 +265,9 @@ export type BuilderConfig<
 /** Rust visibility modifier. `undefined` = no modifier (crate-private). */
 export type Visibility = 'pub' | undefined;
 
-export type NodeType<
-  K extends RustNodeKind,
-  Visited extends string[] = []
-> = SimplifyDeep<Readonly<{ kind: K }> & DerivedNodeShape<K, Visited>>;
+export type NodeType<K extends RustNodeKind, Visited extends string[] = []> = SimplifyDeep<
+	Readonly<{ kind: K }> & DerivedNodeShape<K, Visited>
+>;
 
 // ---------------------------------------------------------------------------
 // Helper aliases — grammar-direct, zero hand-rolled fields
@@ -288,13 +307,13 @@ export type SourceFile = NodeType<'source_file'>;
 
 /** Discriminated union of all supported IR node kinds. */
 export type RustIrNode =
-  | StructItem
-  | FunctionItem
-  | UseDeclaration
-  | ImplItem
-  | IfExpression
-  | MacroInvocation
-  | SourceFile;
+	| StructItem
+	| FunctionItem
+	| UseDeclaration
+	| ImplItem
+	| IfExpression
+	| MacroInvocation
+	| SourceFile;
 
 export type StructItemConfig = BuilderConfig<StructItem>;
 export type FunctionItemConfig = BuilderConfig<FunctionItem>;
@@ -309,5 +328,5 @@ export type SourceFileConfig = BuilderConfig<SourceFile>;
 // ---------------------------------------------------------------------------
 
 export type ValidationResult =
-  | { ok: true }
-  | { ok: false; errors: Array<{ offset: number; kind: 'ERROR' }> };
+	| { ok: true }
+	| { ok: false; errors: Array<{ offset: number; kind: 'ERROR' }> };

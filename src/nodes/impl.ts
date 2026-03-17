@@ -3,13 +3,13 @@ export type { ImplItem, ImplItemConfig } from '../types.js';
 import type { ImplItem, ImplItemConfig } from '../types.js';
 
 export function implItem(config: ImplItemConfig): ImplItem {
-  if (!config.type) throw new Error('implItem: type must be a non-empty string');
-  return {
-    kind: 'impl_item',
-    type: config.type as ImplItem['type'],
-    trait: config.trait as ImplItem['trait'],
-    body: config.body as ImplItem['body'],
-    typeParameters: config.typeParameters as ImplItem['typeParameters'],
-    children: config.children as ImplItem['children'],
-  };
+	if (!config.type) throw new Error('implItem: type must be a non-empty string');
+	return {
+		kind: 'impl_item',
+		type: config.type as ImplItem['type'],
+		trait: config.trait as ImplItem['trait'],
+		body: config.body as ImplItem['body'],
+		typeParameters: config.typeParameters as ImplItem['typeParameters'],
+		children: config.children as ImplItem['children'],
+	};
 }

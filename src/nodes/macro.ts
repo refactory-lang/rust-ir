@@ -3,11 +3,11 @@ export type { MacroInvocation, MacroInvocationConfig } from '../types.js';
 import type { MacroInvocation, MacroInvocationConfig } from '../types.js';
 
 export function macroInvocation(config: MacroInvocationConfig): MacroInvocation {
-  if (!config.macro) throw new Error('macroInvocation: macro name must be a non-empty string');
-  if (!config.children) throw new Error('macroInvocation: children must be a non-empty string');
-  return {
-    kind: 'macro_invocation',
-    macro: config.macro as MacroInvocation['macro'],
-    children: config.children as MacroInvocation['children'],
-  };
+	if (!config.macro) throw new Error('macroInvocation: macro name must be a non-empty string');
+	if (!config.children) throw new Error('macroInvocation: children must be a non-empty string');
+	return {
+		kind: 'macro_invocation',
+		macro: config.macro as MacroInvocation['macro'],
+		children: config.children as MacroInvocation['children'],
+	};
 }

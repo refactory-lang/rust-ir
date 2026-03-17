@@ -5,7 +5,7 @@
 **Status**: Draft
 **Input**: User description: "Create a typed Rust IR builder for JSSG transforms — builds structured Rust AST nodes, renders to source, validates via tree-sitter parse"
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 — Build and render a struct (Priority: P1)
 
@@ -17,9 +17,9 @@ A JSSG transform author translates a Python `@dataclass` class into Rust. Instea
 
 **Acceptance Scenarios**:
 
-1. **Given** a `StructItem` with name `Config` and fields `[{ name: "host", type: "String" }, { name: "port", type: "u16" }]`, **When** `render()` is called, **Then** the output is parseable Rust containing a `struct_item` node with two `field_declaration` children.
-2. **Given** a `StructItem` with a derive attribute `["Debug", "Clone", "PartialEq"]`, **When** `render()` is called, **Then** the output starts with `#[derive(Debug, Clone, PartialEq)]` followed by `pub struct`.
-3. **Given** a `StructItem` with zero fields, **When** `render()` is called, **Then** the output is `pub struct Empty;` (unit struct).
+1. **Given** a `StructItem` with name `Guard`, a pre-rendered `body` containing field declarations, and `children: ["pub"]` for visibility, **When** `render()` is called, **Then** the output is parseable Rust containing a `struct_item` with the field body.
+2. ~~**Given** a `StructItem` with a derive attribute `["Debug", "Clone", "PartialEq"]`, **When** `render()` is called, **Then** the output starts with `#[derive(Debug, Clone, PartialEq)]` followed by `pub struct`.~~ _Removed in grammar-direct refactor — `derives` is not a tree-sitter-rust grammar field on `struct_item`. Derive attributes must be rendered as a separate string prepended to the struct output if needed (Constitution Principle I: Grammar Fidelity)._
+3. **Given** a `StructItem` with zero fields (no `body`), **When** `render()` is called, **Then** the output is `pub struct Empty;` (unit struct).
 
 ---
 
@@ -49,8 +49,10 @@ A transform author translates a Python `import` into a Rust `use` statement by c
 
 **Acceptance Scenarios**:
 
-1. **Given** a `UseDeclaration` with path `["std", "collections"]` and items `["HashMap", "BTreeMap"]`, **When** `render()` is called, **Then** output is `use std::collections::{HashMap, BTreeMap};` and parses as a `use_declaration`.
-2. **Given** a `UseDeclaration` with a single item, **When** `render()` is called, **Then** output is `use path::Item;` (no braces).
+1. **Given** a `UseDeclaration` with `argument: "std::collections::{HashMap, BTreeMap}"` (grammar field: `use_declaration.argument`), **When** `render()` is called, **Then** output is `use std::collections::{HashMap, BTreeMap};` and parses as a `use_declaration`.
+2. **Given** a `UseDeclaration` with `argument: "std::fmt::Display"`, **When** `render()` is called, **Then** output is `use std::fmt::Display;`.
+
+> _Grammar alignment note_: The original spec described separate `path` and `items` arrays. The tree-sitter-rust grammar defines `use_declaration` with a single `argument` field containing the full use tree. The implementation follows the grammar (Constitution Principle I).
 
 ---
 
@@ -64,8 +66,10 @@ A transform author constructs an `ImplItem` for a struct, optionally implementin
 
 **Acceptance Scenarios**:
 
-1. **Given** an `ImplItem` for type `Guard` with no trait, containing one method `new`, **When** `render()` is called, **Then** output parses as an `impl_item` with a `declaration_list` containing a `function_item`.
+1. **Given** an `ImplItem` for type `Guard` with no trait, and a pre-rendered `body` string containing a function via `render(functionItem(...))`, **When** `render()` is called, **Then** output parses as an `impl_item` with a `declaration_list` containing a `function_item`.
 2. **Given** an `ImplItem` for type `Guard` implementing trait `Drop`, **When** `render()` is called, **Then** output contains `impl Drop for Guard`.
+
+> _Grammar alignment note_: The grammar field `impl_item.body` is a `declaration_list`, not an array of `FunctionItem` nodes. Methods are composed by rendering individual `functionItem` nodes and passing the result as the `body` string.
 
 ---
 
@@ -79,8 +83,10 @@ A transform author constructs an `IfExpression` with condition, consequence, opt
 
 **Acceptance Scenarios**:
 
-1. **Given** an `IfExpression` with condition `x > 0`, consequence `"Ok(x)"`, else clause `"Err(\"negative\")"`, **When** `render()` is called, **Then** output parses as an `if_expression` with an `else_clause`.
-2. **Given** an `IfExpression` with two else-if branches, **When** `render()` is called, **Then** output contains chained `else if` clauses that parse without `ERROR` nodes.
+1. **Given** an `IfExpression` with `condition: "x > 0"`, `consequence: "Ok(x)"`, `alternative: "Err(\"negative\")"` (grammar field: `if_expression.alternative`), **When** `render()` is called, **Then** output parses as an `if_expression` with an `else_clause`.
+2. **Given** nested `IfExpression` nodes composed via `render()` — an outer if with `alternative` set to the rendered output of an inner `ifExpression` — **When** `render()` is called, **Then** output contains chained `else if` clauses that parse without `ERROR` nodes.
+
+> _Grammar alignment note_: The original spec described a flat `elseIfClauses` array. In the tree-sitter-rust grammar, else-if chains are nested `if_expression` nodes inside the `alternative` field (which points to `else_clause`). The implementation follows the grammar via compositional rendering (Constitution Principle I).
 
 ---
 
@@ -94,7 +100,7 @@ A transform author constructs a `MacroInvocation` for things like `format!("..."
 
 **Acceptance Scenarios**:
 
-1. **Given** a `MacroInvocation` with macro name `format` and token tree `"hello {}", name`, **When** `render()` is called, **Then** output is `format!("hello {}", name)` and parses as a `macro_invocation`.
+1. **Given** a `MacroInvocation` with `macro: "format"` and `children: '"hello {}", name'` (grammar field: `macro_invocation` children slot `token_tree`), **When** `render()` is called, **Then** output is `format!("hello {}", name)` and parses as a `macro_invocation`.
 
 ---
 
@@ -123,7 +129,9 @@ A transform author builds a full Rust source file by composing multiple top-leve
 
 **Acceptance Scenarios**:
 
-1. **Given** a `SourceFile` containing `[UseDeclaration, StructItem, ImplItem]`, **When** `render()` is called, **Then** output parses as a `source_file` with three top-level children and zero `ERROR` nodes.
+1. **Given** a `SourceFile` with `children` containing three pre-rendered strings (from `render(useDeclaration(...))`, `render(structItem(...))`, `render(implItem(...))`), **When** `render()` is called, **Then** output parses as a `source_file` with three top-level items and zero `ERROR` nodes.
+
+> _Grammar alignment note_: The grammar's `source_file.children` slot accepts `_declaration_statement` kinds (abstract supertypes) which resolve to branded-string leaves in the type system. Children are composed by pre-rendering each IR node.
 
 ---
 
@@ -135,6 +143,18 @@ A transform author builds a full Rust source file by composing multiple top-leve
 - What happens when render is called on a node with missing required fields (e.g., struct with no name)? The builder rejects this at construction time via TypeScript types (compilation error) **and** also throws a descriptive error at runtime — see FR-007 and the clarification below.
 
 ## Clarifications
+
+### Session 2026-03-16 — Grammar-Direct Refactor
+
+- Q: Should IR node types be hand-rolled or derived from the grammar? → A: 100% grammar-derived — all node shapes are mapped types from `@codemod.com/jssg-types/langs/rust` with `CamelCase` field name conversion (via `type-fest`) and an ergonomic alias map (e.g. `parameter.pattern` → `name`). Zero hand-rolled field definitions.
+
+- Q: How are `else if` chains represented? → A: Compositionally — the `alternative` field (grammar: `if_expression.alternative` → `else_clause`) accepts a pre-rendered string. To build `else if` chains, render an inner `ifExpression` and pass its output as `alternative` to the outer one. The renderer detects strings starting with `if ` and emits `else if` instead of `else { ... }`.
+
+- Q: How are `impl` method bodies composed? → A: The grammar field `impl_item.body` is a `declaration_list`. Methods are composed by rendering individual `functionItem` nodes (with optional indentation) and passing the result as the `body` string.
+
+- Q: How are `source_file` children composed? → A: The grammar's `source_file.children` slot accepts abstract `_declaration_statement` supertypes. Children are composed by pre-rendering each IR node via `render()` and passing the resulting strings as the `children` array.
+
+- Q: What happened to `derives`, `visibility`, `fields` (as array), `params` (as array), `methods`, `elseIfClauses`, `tokens`, `items`? → A: All removed in favor of grammar-direct fields: `body` (pre-rendered), `children` (visibility/token_tree), `parameters` (pre-rendered string), `alternative`, per Constitution Principle I (Grammar Fidelity).
 
 ### Session 2026-03-13
 
@@ -148,7 +168,7 @@ A transform author builds a full Rust source file by composing multiple top-leve
 
 - Q: How is IR converted to code? → A: The IR builder library provides a pure `render(node)` function that converts any IR node (or tree of nodes) to Rust source code. The transform or adapter calls `render()` on the constructed IR.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -164,10 +184,10 @@ A transform author builds a full Rust source file by composing multiple top-leve
 ### Key Entities
 
 - **IR Node**: A plain TypeScript object (discriminated union) representing a single Rust grammar node. Has a `kind` literal field matching a tree-sitter-rust node type name and configuration fields. Rendered via a standalone `render(node): string` function (not an instance method). Factory functions (e.g., `structItem(...)`, `functionItem(...)`) construct each variant.
-- **SourceFile**: A container IR node variant that holds an ordered list of top-level IR nodes (declarations, expressions) and renders them with proper spacing via the same `render()` function.
+- **SourceFile**: A container IR node variant whose `children` field holds an ordered list of pre-rendered Rust source strings (each produced by calling `render()` on an individual IR node). The `render()` function joins these with `\n\n` separation.
 - **ValidationResult**: Either `{ ok: true }` or `{ ok: false, errors: Array<{ offset: number, kind: string }> }` describing parse errors.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

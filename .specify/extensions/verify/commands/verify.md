@@ -152,18 +152,18 @@ Output a Markdown report (no file writes) with the following structure:
 
 ## Verification Report
 
-| ID | Category | Severity | Location(s) | Summary | Recommendation |
-|----|----------|----------|-------------|---------|----------------|
-| A1 | Task Completion | CRITICAL | tasks.md | 3 of 12 tasks incomplete | Complete tasks T05, T08, T11 |
-| B1 | File Existence | CRITICAL | src/auth.ts | Task-referenced file missing | Create file or update task reference |
-| C1 | Requirement Coverage | CRITICAL | spec.md:FR-003 | No implementation evidence | Implement FR-003 |
+| ID  | Category             | Severity | Location(s)    | Summary                      | Recommendation                       |
+| --- | -------------------- | -------- | -------------- | ---------------------------- | ------------------------------------ |
+| A1  | Task Completion      | CRITICAL | tasks.md       | 3 of 12 tasks incomplete     | Complete tasks T05, T08, T11         |
+| B1  | File Existence       | CRITICAL | src/auth.ts    | Task-referenced file missing | Create file or update task reference |
+| C1  | Requirement Coverage | CRITICAL | spec.md:FR-003 | No implementation evidence   | Implement FR-003                     |
 
 (Add one row per finding; generate stable IDs prefixed by check letter: A1, B1, C1... Reference specific files and line numbers in Location(s) where applicable.)
 
 **Task Summary Table:**
 
 | Task ID | Status | Referenced Files | Notes |
-|---------|--------|-----------------|-------|
+| ------- | ------ | ---------------- | ----- |
 
 **Constitution Alignment Issues:** (if any)
 
@@ -208,4 +208,3 @@ Ask the user: "Would you like me to suggest concrete remediation edits for the t
 ### Idempotency by Design
 
 The command produces deterministic output — running verification twice on the same state yields the same report. No counters, timestamp-dependent logic, or accumulated state affects findings. The report is fully regenerated on each run.
-
