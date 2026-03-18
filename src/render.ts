@@ -9,12 +9,19 @@ import type {
 	SourceFile,
 } from './types.js';
 
+/** Indent every line of `text` by 4 spaces. */
+function indent(text: string): string {
+	return text
+		.split('\n')
+		.map((line) => '    ' + line)
+		.join('\n');
+}
+
 /**
  * Render any IR node to a Rust source string.
  *
- * Pure function — no side effects. Each branch is implemented in the
- * corresponding node-kind phase; until then the branch throws so that
- * failing tests give a clear signal.
+ * Pure function — no side effects. Dispatches by `node.kind` to a
+ * per-kind renderer. All 7 supported node kinds are handled exhaustively.
  */
 export function render(node: RustIrNode): string {
 	switch (node.kind) {
@@ -32,15 +39,30 @@ export function render(node: RustIrNode): string {
 			return renderMacro(node);
 		case 'source_file':
 			return renderSourceFile(node);
+		default: {
+			const _exhaustive: never = node;
+			throw new Error(
+				`render: unknown node kind: ${(node as { kind: string }).kind}`,
+			);
+		}
 	}
 }
 
-/** Render a value that may be an IR node or a plain string. */
+/**
+ * Render a value that may be an IR node or a pre-rendered string.
+ * Used in composition patterns where children may already be rendered
+ * (e.g., sourceFile children are pre-rendered item strings).
+ *
+ * @throws {Error} if `item` is not a string or an object with a `kind` property.
+ */
 function renderChild(item: unknown): string {
+	if (typeof item === 'string') return item;
 	if (typeof item === 'object' && item !== null && 'kind' in item) {
 		return render(item as RustIrNode);
 	}
-	return String(item);
+	throw new Error(
+		`render: expected a string or RustIrNode, got ${typeof item}: ${String(item).slice(0, 80)}`,
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -48,8 +70,13 @@ function renderChild(item: unknown): string {
 // ---------------------------------------------------------------------------
 
 function renderSourceFile(node: SourceFile): string {
-	if (!node.children) return '';
-	const items = node.children as unknown as unknown[];
+	// Defensive — builder validates non-empty children; guards against manual construction
+	if (!node.children) {
+		throw new Error(
+			`render: source_file node has no children (got ${JSON.stringify(node.children)})`,
+		);
+	}
+	const items = node.children as unknown[];
 	return items.map(renderChild).join('\n\n');
 }
 
@@ -58,7 +85,10 @@ function renderSourceFile(node: SourceFile): string {
 // ---------------------------------------------------------------------------
 
 function renderMacro(node: MacroInvocation): string {
-	return `${node.macro}!(${node.children})`;
+	const content = String(node.children);
+	// Detect delimiter style from content: [..] → ![], {..} → !{}, otherwise !()
+	if (content.startsWith('[') || content.startsWith('{')) return `${node.macro}!${content}`;
+	return `${node.macro}!(${content})`;
 }
 
 // ---------------------------------------------------------------------------
@@ -66,13 +96,15 @@ function renderMacro(node: MacroInvocation): string {
 // ---------------------------------------------------------------------------
 
 function renderIf(node: IfExpression): string {
-	let output = `if ${node.condition} {\n    ${node.consequence}\n}`;
+	let output = `if ${node.condition} {\n${indent(String(node.consequence))}\n}`;
 	if (node.alternative !== undefined) {
-		const alt = String(node.alternative);
+		const alt = renderChild(node.alternative);
+		// If alternative is a pre-rendered if-expression, emit "else if ..." (no braces);
+		// otherwise wrap in "else { ... }" block.
 		if (alt.startsWith('if ')) {
 			output += ` else ${alt}`;
 		} else {
-			output += ` else {\n    ${alt}\n}`;
+			output += ` else {\n${indent(alt)}\n}`;
 		}
 	}
 	return output;
@@ -80,6 +112,7 @@ function renderIf(node: IfExpression): string {
 
 // ---------------------------------------------------------------------------
 // impl_item
+// TODO: typeParameters rendering (deferred — no active transform needs generics yet)
 // ---------------------------------------------------------------------------
 
 function renderImpl(node: ImplItem): string {
@@ -90,24 +123,19 @@ function renderImpl(node: ImplItem): string {
 	const bodyVal = node.body as unknown;
 	let bodyStr: string;
 
+	// Array of methods — render and indent each item
 	if (Array.isArray(bodyVal)) {
-		bodyStr = (bodyVal as unknown[])
-			.map((item) => {
-				const text = renderChild(item);
-				return text
-					.split('\n')
-					.map((line) => '    ' + line)
-					.join('\n');
-			})
-			.join('\n');
+		bodyStr = (bodyVal as unknown[]).map((item) => indent(renderChild(item))).join('\n');
 	} else if (typeof bodyVal === 'object' && bodyVal !== null && 'kind' in bodyVal) {
-		const text = render(bodyVal as RustIrNode);
-		bodyStr = text
-			.split('\n')
-			.map((line) => '    ' + line)
-			.join('\n');
+		// Single IR node (e.g., one method) — render and indent
+		bodyStr = indent(render(bodyVal as RustIrNode));
+	} else if (typeof bodyVal === 'string') {
+		// Pre-rendered string body — auto-indent for consistency with node/array paths
+		bodyStr = indent(bodyVal);
 	} else {
-		bodyStr = String(bodyVal);
+		throw new Error(
+			`renderImpl: unexpected body type: ${typeof bodyVal} (${String(bodyVal).slice(0, 80)})`,
+		);
 	}
 
 	return bodyStr.length > 0 ? `${header}\n${bodyStr}\n}` : `${header}\n}`;
@@ -123,23 +151,27 @@ function renderUse(node: UseDeclaration): string {
 
 // ---------------------------------------------------------------------------
 // function_item
+// TODO: typeParameters rendering (deferred — no active transform needs generics yet)
 // ---------------------------------------------------------------------------
 
 function renderFunction(node: FunctionItem): string {
-	const vis = node.children ? `${node.children} ` : '';
-	const paramList = node.parameters ? String(node.parameters) : '';
-	const ret = node.returnType ? ` -> ${node.returnType}` : '';
-	return `${vis}fn ${node.name}(${paramList})${ret} {\n    ${node.body}\n}`;
+	// Grammar `children` slot carries the visibility modifier (e.g., "pub")
+	const vis = node.children !== undefined ? `${node.children} ` : '';
+	const paramList = node.parameters ?? '';
+	const ret = node.returnType !== undefined ? ` -> ${node.returnType}` : '';
+	return `${vis}fn ${node.name}(${paramList})${ret} {\n${indent(String(node.body))}\n}`;
 }
 
 // ---------------------------------------------------------------------------
 // struct_item
+// TODO: typeParameters rendering (deferred — no active transform needs generics yet)
 // ---------------------------------------------------------------------------
 
 function renderStruct(node: StructItem): string {
-	const vis = node.children ? `${(node.children as unknown as string[])[0]} ` : '';
+	// Grammar `children` slot carries the visibility modifier (e.g., "pub")
+	const vis = node.children !== undefined ? `${node.children} ` : '';
 	if (node.body) {
-		return `${vis}struct ${node.name} {\n${node.body}\n}`;
+		return `${vis}struct ${node.name} {\n${indent(String(node.body))}\n}`;
 	}
 	return `${vis}struct ${node.name};`;
 }

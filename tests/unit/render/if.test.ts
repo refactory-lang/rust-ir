@@ -58,7 +58,15 @@ describe('ifExpression() + render()', () => {
 		expect(() => ifExpression({ condition: '', consequence: 'x' })).toThrow(/condition/i);
 	});
 
+	it('throws when condition is whitespace-only', () => {
+		expect(() => ifExpression({ condition: '  ', consequence: 'x' })).toThrow(/condition/i);
+	});
+
 	it('throws when consequence is empty', () => {
 		expect(() => ifExpression({ condition: 'true', consequence: '' })).toThrow(/consequence/i);
+	});
+
+	it('throws when consequence is whitespace-only', () => {
+		expect(() => ifExpression({ condition: 'true', consequence: '  ' })).toThrow(/consequence/i);
 	});
 });

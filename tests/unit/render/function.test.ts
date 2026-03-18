@@ -50,4 +50,17 @@ describe('functionItem() + render()', () => {
 	it('throws a descriptive error when body is empty', () => {
 		expect(() => functionItem({ name: 'f', body: '' })).toThrow(/body/i);
 	});
+
+	it('throws when name is whitespace-only', () => {
+		expect(() => functionItem({ name: '  ', body: '42' })).toThrow(/name/i);
+	});
+
+	it('renders correctly when parameters is not provided (undefined)', () => {
+		const node = functionItem({ name: 'noop', body: '()' });
+		const output = render(node);
+		expect(output).toContain('fn noop()');
+		expect(output).not.toContain('undefined');
+		const vr = validate(output);
+		expect(vr.ok).toBe(true);
+	});
 });

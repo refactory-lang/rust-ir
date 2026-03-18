@@ -15,18 +15,14 @@ describe('sourceFile() + render()', () => {
 			returnType: 'fmt::Result',
 			body: 'write!(f, "({}, {})", self.x, self.y)',
 		});
-		const renderedMethod = render(method)
-			.split('\n')
-			.map((line) => '    ' + line)
-			.join('\n');
 		const children = [
 			render(useDeclaration({ argument: 'std::fmt::Display' })),
-			render(structItem({ name: 'Point', body: '    x: f64,\n    y: f64,', children: ['pub'] })),
+			render(structItem({ name: 'Point', body: 'x: f64,\ny: f64,', children: ['pub'] })),
 			render(
 				implItem({
 					type: 'Point',
 					trait: 'Display',
-					body: renderedMethod,
+					body: render(method),
 				}),
 			),
 		];
@@ -52,5 +48,17 @@ describe('sourceFile() + render()', () => {
 
 	it('throws when children array is empty', () => {
 		expect(() => sourceFile({ children: [] })).toThrow(/children/i);
+	});
+
+	it('renders sourceFile with IR node children directly (renderChild IR-node path)', () => {
+		const useNode = useDeclaration({ argument: 'std::io' });
+		const struct = structItem({ name: 'Cfg' });
+		// Pass IR nodes directly — renderChild should recursively render them
+		const node = sourceFile({ children: [useNode, struct] as never });
+		const output = render(node);
+		expect(output).toContain('use std::io;');
+		expect(output).toContain('struct Cfg;');
+		const vr = validate(output);
+		expect(vr.ok).toBe(true);
 	});
 });

@@ -7,7 +7,7 @@ describe('structItem() + render()', () => {
 	it('renders a named-field pub struct that validates ok', () => {
 		const node = structItem({
 			name: 'Guard',
-			body: '    value: i32,\n    active: bool,',
+			body: 'value: i32,\nactive: bool,',
 			children: ['pub'],
 		});
 		const output = render(node);
@@ -28,7 +28,7 @@ describe('structItem() + render()', () => {
 	});
 
 	it('renders a private struct (no visibility) that validates ok', () => {
-		const node = structItem({ name: 'Inner', body: '    x: f64,' });
+		const node = structItem({ name: 'Inner', body: 'x: f64,' });
 		const output = render(node);
 		expect(output).not.toMatch(/^pub\s/);
 		expect(output).toContain('struct Inner');
@@ -38,5 +38,9 @@ describe('structItem() + render()', () => {
 
 	it('throws a descriptive error when name is empty', () => {
 		expect(() => structItem({ name: '' })).toThrow(/name/i);
+	});
+
+	it('throws a descriptive error when name is whitespace-only', () => {
+		expect(() => structItem({ name: '  ' })).toThrow(/name/i);
 	});
 });

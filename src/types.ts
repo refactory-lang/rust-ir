@@ -6,7 +6,7 @@
  * type name exactly (per Constitution Principle I: Grammar Fidelity).
  *
  * Every node shape is derived 100% from the grammar — zero hand-rolled
- * field definitions.  Field names are CamelCase-converted automatically
+ * field definitions.  Field names are CamelCase-converted at the type level
  * (e.g. `return_type` → `returnType`) with an optional ergonomic alias
  * map for readability (e.g. `pattern` → `name` on `parameter`).
  */
@@ -133,9 +133,13 @@ type RustChildrenInfo<K extends RustNodeKind> = RustGrammar[K] extends { childre
 // Adding an entry here renames the derived field in the IR type.
 // ---------------------------------------------------------------------------
 
+type ValidAliasMap = {
+	[K in RustNodeKind]?: Partial<Record<RustFieldName<K>, string>>;
+};
+
 type FieldAliasMap = {
 	parameter: { pattern: 'name' };
-};
+} & ValidAliasMap;
 
 /**
  * Resolve the output key for a given (kind, field_name) pair.
@@ -150,8 +154,8 @@ type ResolveFieldKey<K extends RustNodeKind, F extends string> = K extends keyof
 // ---------------------------------------------------------------------------
 // Grammar-derived node shapes  (CamelCase keys + alias map)
 //
-// Depth-aware: fields and children are recursively expanded via
-// ExpandSlot until the depth tuple is exhausted.
+// Cycle-aware: fields and children are recursively expanded via
+// ExpandSlot, stopping when a kind has already been visited.
 // ---------------------------------------------------------------------------
 
 type DerivedNodeFields<K extends RustNodeKind, Visited extends string[]> = {
@@ -191,6 +195,11 @@ type ExpandNode<K extends RustNodeKind, Visited extends string[]> = Readonly<{ k
 // Builder input helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Recursively loosen an IR node type for builder input:
+ * branded strings → plain string, nodes → node | string, arrays → loosened element arrays.
+ * Preserves literal string unions and non-branded primitives.
+ */
 type BuilderInputValue<T> = T extends { kind: RustNodeKind }
 	? T | string
 	: T extends readonly (infer U)[]
@@ -205,19 +214,13 @@ type BuilderInputValue<T> = T extends { kind: RustNodeKind }
 					? { [K in keyof T]: BuilderInputValue<T[K]> }
 					: T;
 
-// Hand-rolled key helpers for BuilderInputValue only.
-type OptionalKeyOf<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K> ? K : never;
-}[keyof T];
-
-type RequiredKeyOf<T> = Exclude<keyof T, OptionalKeyOf<T>>;
-
 export type RustNodeText<K extends RustNodeKind> = RustTextBrand<K>;
 
 export type RustFieldText<K extends RustNodeKind, F extends RustFieldName<K>> = RustTextBrand<
 	RustFieldKinds<K, F>
 >;
 
+/** Strip `kind` and apply BuilderInputValue loosening to produce a builder's raw input shape. */
 export type NodeBuilderInput<T extends { kind: RustNodeKind }> = Simplify<
 	{
 		[K in Exclude<Extract<RequiredKeysOf<T>, keyof T>, 'kind'>]: BuilderInputValue<T[K]>;
@@ -227,9 +230,9 @@ export type NodeBuilderInput<T extends { kind: RustNodeKind }> = Simplify<
 >;
 
 /**
- * Grammar-derived field names that get builder defaults (empty arrays,
- * undefined optionals, etc.).  All names are CamelCase conversions of
- * grammar field names or alias-map overrides.
+ * Grammar-derived field names that become optional in `BuilderConfig<T>`.
+ * Callers may omit these fields; they're passed through as-is
+ * (no synthetic defaults are applied by the builders).
  */
 export type DefaultableBuilderFieldName =
 	| 'body'
@@ -240,6 +243,7 @@ export type DefaultableBuilderFieldName =
 	| 'trait'
 	| 'alternative';
 
+/** Extract keys from a builder input that match DefaultableBuilderFieldName. */
 type DefaultableKeys<T extends { kind: RustNodeKind }> = Extract<
 	keyof NodeBuilderInput<T>,
 	DefaultableBuilderFieldName
@@ -261,9 +265,6 @@ export type BuilderConfig<
 // ---------------------------------------------------------------------------
 // Shared primitives
 // ---------------------------------------------------------------------------
-
-/** Rust visibility modifier. `undefined` = no modifier (crate-private). */
-export type Visibility = 'pub' | undefined;
 
 export type NodeType<K extends RustNodeKind, Visited extends string[] = []> = SimplifyDeep<
 	Readonly<{ kind: K }> & DerivedNodeShape<K, Visited>
@@ -316,11 +317,17 @@ export type RustIrNode =
 	| SourceFile;
 
 export type StructItemConfig = BuilderConfig<StructItem>;
-export type FunctionItemConfig = BuilderConfig<FunctionItem>;
+export type FunctionItemConfig = BuilderConfig<
+	FunctionItem,
+	Exclude<DefaultableKeys<FunctionItem>, 'body'>
+>;
 export type UseDeclarationConfig = BuilderConfig<UseDeclaration>;
 export type ImplItemConfig = BuilderConfig<ImplItem>;
 export type IfExpressionConfig = BuilderConfig<IfExpression>;
-export type MacroInvocationConfig = BuilderConfig<MacroInvocation>;
+export type MacroInvocationConfig = BuilderConfig<
+	MacroInvocation,
+	Exclude<DefaultableKeys<MacroInvocation>, 'children'>
+>;
 export type SourceFileConfig = BuilderConfig<SourceFile>;
 
 // ---------------------------------------------------------------------------
