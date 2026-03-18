@@ -1,9 +1,15 @@
-// Implemented in Phase 4 (T011)
-export type { StructItem, FieldDeclaration, StructItemConfig } from '../types.js';
 import type { StructItem, StructItemConfig } from '../types.js';
 
+/**
+ * Build a `struct_item` IR node.
+ * @throws {Error} if `name` is empty or whitespace-only.
+ */
 export function structItem(config: StructItemConfig): StructItem {
-	if (!config.name) throw new Error('structItem: name must be a non-empty string');
+	if (typeof config.name !== 'string' || config.name.trim().length === 0) {
+		throw new Error(
+			`structItem: name must be a non-empty string, got: ${JSON.stringify(config.name)}`,
+		);
+	}
 	return {
 		kind: 'struct_item',
 		name: config.name as StructItem['name'],

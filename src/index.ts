@@ -1,11 +1,11 @@
-// Public entry point — re-exports every public symbol from rust-ir.
+// Public entry point for the rust-ir library.
 export type {
 	RustGrammar,
 	RustNodeKind,
+	RustNamedKind,
 	RustNodeText,
 	RustFieldText,
 	NodeBuilderInput,
-	Visibility,
 	FieldDeclaration,
 	ParameterDeclaration,
 	StructItem,

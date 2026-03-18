@@ -8,151 +8,118 @@
  * Module: ESM (`"type": "module"`)
  * Entry: `src/index.ts`
  * Compatibility: Codemod JSSG runtime, Node.js ≥ 18 (tests/dev)
+ *
+ * AMENDMENT (2026-03-18): All IR node shapes are now 100% grammar-derived
+ * from `@codemod.com/jssg-types` via `NodeType<K>`.  Hand-rolled interfaces
+ * (FieldDeclaration[], ParameterDeclaration[], ElseIfClause[], derives,
+ * visibility, path/items, methods, tokens, elseIfClauses) were replaced
+ * by grammar-direct field names (body, children, parameters, argument,
+ * alternative, etc.).  See Session 2026-03-16 in spec.md for rationale.
  */
 
 // ---------------------------------------------------------------------------
-// Shared primitives
-// ---------------------------------------------------------------------------
-
-/** Rust visibility modifier. `undefined` = no modifier (crate-private). */
-export type Visibility = 'pub' | undefined;
-
-// ---------------------------------------------------------------------------
-// IR Node Kinds
+// Shared primitives (grammar-derived)
 // ---------------------------------------------------------------------------
 
 /**
  * A single named field in a Rust struct.
- * Maps to tree-sitter-rust `field_declaration`.
+ * Grammar-derived via `NodeType<'field_declaration'>`.
  */
-export interface FieldDeclaration {
-	/** Field identifier (e.g., `"host"`) */
-	name: string;
-	/** Raw Rust type string (e.g., `"String"`, `"Vec<u32>"`, `"&'a str"`) */
-	type: string;
-}
+export type FieldDeclaration = import('../../src/types.js').FieldDeclaration;
 
 /**
  * A single function parameter.
- * Maps to tree-sitter-rust `parameter`.
+ * Grammar-derived via `NodeType<'parameter'>`.
  */
-export interface ParameterDeclaration {
-	/** Parameter identifier (e.g., `"input"`, `"self"`) */
-	name: string;
-	/** Raw Rust type string (e.g., `"&str"`, `"&mut Self"`) */
-	type: string;
-}
-
-/**
- * An `else if` branch in an if-expression.
- * Corresponds to `else_clause` wrapping an `if_expression` in tree-sitter-rust.
- */
-export interface ElseIfClause {
-	/** Raw Rust boolean expression (e.g., `"x < 0"`) */
-	condition: string;
-	/** Raw Rust expression(s) for the block body (e.g., `"Err(\"negative\")"`) */
-	consequence: string;
-}
+export type ParameterDeclaration = import('../../src/types.js').ParameterDeclaration;
 
 // ---------------------------------------------------------------------------
 // IR Node types  (discriminated union — `kind` is the discriminant)
+//
+// All shapes are 100% grammar-derived via NodeType<K>.
+// Field names are CamelCase-converted from grammar snake_case names
+// with alias overrides defined in FieldAliasMap.
 // ---------------------------------------------------------------------------
 
 /**
  * Rust `struct` declaration.
  * tree-sitter-rust node: `struct_item`
+ *
+ * Grammar-derived fields:
+ * - `name`: struct identifier (required)
+ * - `body`: struct field block as string (optional — omit for unit struct)
+ * - `typeParameters`: generic parameters (optional)
+ * - `children`: visibility modifier, e.g. `['pub']` (optional)
  */
-export interface StructItem {
-	readonly kind: 'struct_item';
-	/** Struct identifier (e.g., `"Config"`) */
-	name: string;
-	/** Named fields — empty array → unit struct `Name;` */
-	fields: FieldDeclaration[];
-	/** Items in `#[derive(...)]` — empty array → no derive attribute */
-	derives: string[];
-	visibility: Visibility;
-}
+export type StructItem = import('../../src/types.js').StructItem;
 
 /**
  * Rust free function or method.
  * tree-sitter-rust node: `function_item`
+ *
+ * Grammar-derived fields:
+ * - `name`: function identifier (required)
+ * - `body`: function block body as string (required)
+ * - `parameters`: parameter list as string (optional)
+ * - `returnType`: return type string (optional — omit to elide `-> Type`)
+ * - `typeParameters`: generic parameters (optional)
+ * - `children`: visibility modifier (optional)
  */
-export interface FunctionItem {
-	readonly kind: 'function_item';
-	/** Function identifier (e.g., `"process"`) */
-	name: string;
-	/** Parameter list — empty array → `()` */
-	params: ParameterDeclaration[];
-	/** Return type string — `undefined` → omit `-> Type` clause */
-	returnType: string | undefined;
-	/** Raw Rust expression(s) for the block body */
-	body: string;
-	visibility: Visibility;
-}
+export type FunctionItem = import('../../src/types.js').FunctionItem;
 
 /**
  * Rust `use` declaration.
  * tree-sitter-rust node: `use_declaration`
+ *
+ * Grammar-derived fields:
+ * - `argument`: full use path as string, e.g. `"std::collections::HashMap"` (required)
  */
-export interface UseDeclaration {
-	readonly kind: 'use_declaration';
-	/** Path segments, e.g. `["std", "collections"]` */
-	path: string[];
-	/** Imported items, e.g. `["HashMap", "BTreeMap"]` */
-	items: string[];
-}
+export type UseDeclaration = import('../../src/types.js').UseDeclaration;
 
 /**
  * Rust `impl` block.
  * tree-sitter-rust node: `impl_item`
+ *
+ * Grammar-derived fields:
+ * - `type`: type being implemented (required)
+ * - `trait`: trait being implemented (optional — omit for inherent impl)
+ * - `body`: impl body — pre-rendered string, single IR node, or array of IR nodes (optional)
+ * - `typeParameters`: generic parameters (optional)
+ * - `children`: visibility modifier (optional)
  */
-export interface ImplItem {
-	readonly kind: 'impl_item';
-	/** Type being implemented (e.g., `"Guard"`) */
-	type: string;
-	/** Trait being implemented (e.g., `"Drop"`) — `undefined` → inherent impl */
-	trait: string | undefined;
-	/** Method definitions */
-	methods: FunctionItem[];
-}
+export type ImplItem = import('../../src/types.js').ImplItem;
 
 /**
  * Rust `if` / `else if` / `else` expression.
  * tree-sitter-rust node: `if_expression`
+ *
+ * Grammar-derived fields:
+ * - `condition`: raw Rust boolean expression (required)
+ * - `consequence`: block body expression (required)
+ * - `alternative`: else clause — string or nested `render(ifExpression(...))` for else-if chains (optional)
  */
-export interface IfExpression {
-	readonly kind: 'if_expression';
-	/** Raw Rust boolean expression (e.g., `"x > 0"`) */
-	condition: string;
-	/** Raw Rust expression(s) for the block body */
-	consequence: string;
-	/** Chained `else if` branches */
-	elseIfClauses: ElseIfClause[];
-	/** Raw Rust expression(s) for the `else` block — `undefined` → no else */
-	elseClause: string | undefined;
-}
+export type IfExpression = import('../../src/types.js').IfExpression;
 
 /**
  * Rust macro invocation.
  * tree-sitter-rust node: `macro_invocation`
+ *
+ * Grammar-derived fields:
+ * - `macro`: macro name without `!` (required)
+ * - `children`: raw token tree content as string (required).
+ *   Delimiter style is auto-detected: prefix `[` → `![]`, prefix `{` → `!{}`,
+ *   otherwise `!()`.  E.g. `children: '[1, 2]'` renders `vec![1, 2]`.
  */
-export interface MacroInvocation {
-	readonly kind: 'macro_invocation';
-	/** Macro name without `!` (e.g., `"format"`, `"vec"`, `"println"`) */
-	macro: string;
-	/** Raw token tree content (e.g., `'"hello {}", name'`) */
-	tokens: string;
-}
+export type MacroInvocation = import('../../src/types.js').MacroInvocation;
 
 /**
  * A complete Rust source file containing top-level items.
  * tree-sitter-rust node: `source_file`
+ *
+ * Grammar-derived fields:
+ * - `children`: array of pre-rendered item strings or IR nodes (required, non-empty)
  */
-export interface SourceFile {
-	readonly kind: 'source_file';
-	/** Top-level IR nodes in declaration order */
-	items: RustIrNode[];
-}
+export type SourceFile = import('../../src/types.js').SourceFile;
 
 /**
  * Discriminated union of all supported IR node kinds.
@@ -180,7 +147,7 @@ export type RustIrNode =
  */
 export type ValidationResult =
 	| { ok: true }
-	| { ok: false; errors: Array<{ offset: number; kind: string }> };
+	| { ok: false; errors: Array<{ offset: number; kind: 'ERROR' }> };
 
 // ---------------------------------------------------------------------------
 // Factory functions  (exported from `src/index.ts`)
@@ -189,110 +156,104 @@ export type ValidationResult =
 /**
  * Construct a `StructItem` IR node.
  *
- * @throws {Error} if `name` is empty, or any field `name`/`type` is empty.
+ * @throws {Error} if `name` is empty or whitespace-only.
  *
  * @example
  * const node = structItem({
  *   name: "Config",
- *   fields: [{ name: "host", type: "String" }, { name: "port", type: "u16" }],
- *   derives: ["Debug", "Clone"],
+ *   body: "host: String,\n    port: u16,",
+ *   children: "pub",
  * });
  */
-export declare function structItem(config: {
-	name: string;
-	fields?: FieldDeclaration[];
-	derives?: string[];
-	visibility?: Visibility;
-}): StructItem;
+export declare function structItem(
+	config: import('../../src/types.js').StructItemConfig,
+): StructItem;
 
 /**
  * Construct a `FunctionItem` IR node.
  *
- * @throws {Error} if `name` or `body` is empty, or any param field is empty.
+ * @throws {Error} if `name` or `body` is empty or whitespace-only.
  *
  * @example
  * const node = functionItem({
  *   name: "process",
- *   params: [{ name: "input", type: "&str" }],
+ *   parameters: "input: &str",
  *   returnType: "String",
  *   body: "input.to_string()",
- *   visibility: "pub",
+ *   children: "pub",
  * });
  */
-export declare function functionItem(config: {
-	name: string;
-	params?: ParameterDeclaration[];
-	returnType?: string;
-	body: string;
-	visibility?: Visibility;
-}): FunctionItem;
+export declare function functionItem(
+	config: import('../../src/types.js').FunctionItemConfig,
+): FunctionItem;
 
 /**
  * Construct a `UseDeclaration` IR node.
  *
- * @throws {Error} if `argument` is empty.
+ * @throws {Error} if `argument` is empty or whitespace-only.
  *
  * @example
  * const node = useDeclaration({ argument: "std::collections::HashMap" });
  */
-export declare function useDeclaration(config: { argument: string }): UseDeclaration;
+export declare function useDeclaration(
+	config: import('../../src/types.js').UseDeclarationConfig,
+): UseDeclaration;
 
 /**
  * Construct an `ImplItem` IR node.
  *
- * @throws {Error} if `type` is empty.
+ * @throws {Error} if `type` is empty or whitespace-only.
  *
  * @example
  * const node = implItem({
  *   type: "Guard",
  *   trait: "Drop",
- *   methods: [functionItem({ name: "drop", params: [{ name: "self", type: "&mut Self" }], body: "// cleanup" })],
+ *   body: render(functionItem({ name: "drop", body: "// cleanup" })),
  * });
  */
-export declare function implItem(config: {
-	type: string;
-	trait?: string;
-	methods?: FunctionItem[];
-}): ImplItem;
+export declare function implItem(
+	config: import('../../src/types.js').ImplItemConfig,
+): ImplItem;
 
 /**
  * Construct an `IfExpression` IR node.
  *
- * @throws {Error} if `condition` or `consequence` is empty.
+ * @throws {Error} if `condition` or `consequence` is empty or whitespace-only.
  *
  * @example
  * const node = ifExpression({
  *   condition: "x > 0",
  *   consequence: "Ok(x)",
- *   elseClause: 'Err("negative")',
+ *   alternative: 'Err("negative")',
  * });
  */
-export declare function ifExpression(config: {
-	condition: string;
-	consequence: string;
-	elseIfClauses?: ElseIfClause[];
-	elseClause?: string;
-}): IfExpression;
+export declare function ifExpression(
+	config: import('../../src/types.js').IfExpressionConfig,
+): IfExpression;
 
 /**
  * Construct a `MacroInvocation` IR node.
  *
- * @throws {Error} if `macro` or `tokens` is empty.
+ * @throws {Error} if `macro` or `children` is empty or whitespace-only.
  *
  * @example
- * const node = macroInvocation({ macro: "format", tokens: '"hello {}", name' });
+ * const node = macroInvocation({ macro: "format", children: '"hello {}", name' });
  */
-export declare function macroInvocation(config: { macro: string; tokens: string }): MacroInvocation;
+export declare function macroInvocation(
+	config: import('../../src/types.js').MacroInvocationConfig,
+): MacroInvocation;
 
 /**
- * Construct a `SourceFile` IR node composing multiple top-level nodes.
+ * Construct a `SourceFile` IR node composing multiple top-level items.
  *
- * @throws {Error} if `items` is empty.
+ * @throws {Error} if `children` is empty or missing.
  *
  * @example
- * const file = sourceFile({ items: [useDecl, structNode, implNode] });
+ * const file = sourceFile({ children: [render(useDecl), render(structNode)] });
  */
-export declare function sourceFile(config: { items: RustIrNode[] }): SourceFile;
+export declare function sourceFile(
+	config: import('../../src/types.js').SourceFileConfig,
+): SourceFile;
 
 // ---------------------------------------------------------------------------
 // Core operations  (exported from `src/index.ts`)
@@ -302,12 +263,15 @@ export declare function sourceFile(config: { items: RustIrNode[] }): SourceFile;
  * Render any IR node to a Rust source string.
  *
  * Pure function — no side effects. Performs exhaustive pattern matching on
- * `node.kind`. Renders nested nodes recursively (e.g., `ImplItem.methods`,
- * `SourceFile.items`).
+ * `node.kind`. Renders nested nodes recursively (e.g., `ImplItem.body`,
+ * `SourceFile.children`).
+ *
+ * @throws {Error} if an unrecognised node kind is encountered at runtime.
+ * @throws {Error} if a child value is not a string or RustIrNode.
  *
  * @example
  * const src = render(structItem({ name: "Empty" }));
- * // → "pub struct Empty;"
+ * // → "struct Empty;"
  */
 export declare function render(node: RustIrNode): string;
 
@@ -316,9 +280,7 @@ export declare function render(node: RustIrNode): string;
  *
  * Returns `{ ok: true }` if the parse tree contains no `ERROR` nodes.
  * Returns `{ ok: false, errors }` listing each ERROR node's byte offset and kind.
- *
- * The bundled parser is ESM-compatible and has no Node.js built-in dependencies.
- * JSSG compatibility is verified by the integration test.
+ * If the parser itself throws, returns `{ ok: false }` with a synthetic error.
  *
  * @example
  * const result = validate("pub struct Empty;");

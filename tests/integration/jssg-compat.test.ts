@@ -45,24 +45,20 @@ describe('JSSG transform fixture — rust-ir API compatibility', () => {
 			body: 'Self { entries: HashMap::new() }',
 			children: ['pub'],
 		});
-		const renderedMethod = render(method)
-			.split('\n')
-			.map((line) => '    ' + line)
-			.join('\n');
 		const node = sourceFile({
 			children: [
 				render(useDeclaration({ argument: 'std::collections::HashMap' })),
 				render(
 					structItem({
 						name: 'Registry',
-						body: '    entries: HashMap<String, u32>,',
+					body: 'entries: HashMap<String, u32>,',
 						children: ['pub'],
 					}),
 				),
 				render(
 					implItem({
 						type: 'Registry',
-						body: renderedMethod,
+						body: render(method),
 					}),
 				),
 			],
@@ -94,5 +90,27 @@ describe('JSSG transform fixture — rust-ir API compatibility', () => {
 			kind: 'macro_invocation',
 		});
 		// sourceFile (already tested above)
+	});
+});
+
+describe('render() edge cases', () => {
+	it('throws on unknown node kind at runtime', () => {
+		const bogus = { kind: 'bogus_node' } as never;
+		expect(() => render(bogus)).toThrow(/unknown node kind/i);
+	});
+
+	it('throws when renderChild receives a non-string non-node value via sourceFile', () => {
+		// Force a number into children to exercise the renderChild guard
+		const node = sourceFile({ children: [42 as never] });
+		expect(() => render(node)).toThrow(/expected a string or RustIrNode/i);
+	});
+
+	it('validate returns ok:false when source is invalid Rust', () => {
+		const result = validate('pub struct {');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.errors.length).toBeGreaterThan(0);
+			expect(result.errors[0].offset).toBeGreaterThanOrEqual(0);
+		}
 	});
 });
