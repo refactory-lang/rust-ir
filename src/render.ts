@@ -71,7 +71,7 @@ function renderChild(item: unknown): string {
 
 function renderSourceFile(node: SourceFile): string {
 	// Defensive — builder validates non-empty children; guards against manual construction
-	if (!node.children) {
+	if (!node.children || (Array.isArray(node.children) && node.children.length === 0)) {
 		throw new Error(
 			`render: source_file node has no children (got ${JSON.stringify(node.children)})`,
 		);
@@ -156,7 +156,10 @@ function renderUse(node: UseDeclaration): string {
 
 function renderFunction(node: FunctionItem): string {
 	// Grammar `children` slot carries the visibility modifier (e.g., "pub")
-	const vis = node.children !== undefined ? `${node.children} ` : '';
+	const vis =
+		node.children !== undefined
+			? `${Array.isArray(node.children) ? (node.children as unknown[]).join(' ') : node.children} `
+			: '';
 	const paramList = node.parameters ?? '';
 	const ret = node.returnType !== undefined ? ` -> ${node.returnType}` : '';
 	return `${vis}fn ${node.name}(${paramList})${ret} {\n${indent(String(node.body))}\n}`;
@@ -169,7 +172,10 @@ function renderFunction(node: FunctionItem): string {
 
 function renderStruct(node: StructItem): string {
 	// Grammar `children` slot carries the visibility modifier (e.g., "pub")
-	const vis = node.children !== undefined ? `${node.children} ` : '';
+	const vis =
+		node.children !== undefined
+			? `${Array.isArray(node.children) ? (node.children as unknown[]).join(' ') : node.children} `
+			: '';
 	if (node.body) {
 		return `${vis}struct ${node.name} {\n${indent(String(node.body))}\n}`;
 	}

@@ -31,17 +31,12 @@ import { structItem, render, validate } from 'rust-ir';
 
 const node = structItem({
 	name: 'Config',
-	fields: [
-		{ name: 'host', type: 'String' },
-		{ name: 'port', type: 'u16' },
-	],
-	derives: ['Debug', 'Clone', 'PartialEq'],
-	visibility: 'pub',
+	body: 'host: String,\nport: u16,',
+	children: ['pub'],
 });
 
 const src = render(node);
 /*
-#[derive(Debug, Clone, PartialEq)]
 pub struct Config {
     host: String,
     port: u16,
@@ -61,10 +56,10 @@ import { functionItem, render, validate } from 'rust-ir';
 
 const node = functionItem({
 	name: 'process',
-	params: [{ name: 'input', type: '&str' }],
+	parameters: 'input: &str',
 	returnType: 'String',
 	body: 'input.to_string()',
-	visibility: 'pub',
+	children: ['pub'],
 });
 
 const src = render(node);
@@ -86,15 +81,14 @@ const result = validate(src);
 import { useDeclaration, render } from 'rust-ir';
 
 const node = useDeclaration({
-	path: ['std', 'collections'],
-	items: ['HashMap', 'BTreeMap'],
+	argument: 'std::collections::{HashMap, BTreeMap}',
 });
 
 render(node);
 // → "use std::collections::{HashMap, BTreeMap};"
 
 // Single item — no braces:
-render(useDeclaration({ path: ['std', 'fmt'], items: ['Write'] }));
+render(useDeclaration({ argument: 'std::fmt::Write' }));
 // → "use std::fmt::Write;"
 ```
 
@@ -107,14 +101,14 @@ import { implItem, functionItem, render } from 'rust-ir';
 
 const dropMethod = functionItem({
 	name: 'drop',
-	params: [{ name: 'self', type: '&mut Self' }],
+	parameters: '&mut self',
 	body: '// cleanup',
 });
 
 const node = implItem({
 	type: 'Guard',
 	trait: 'Drop',
-	methods: [dropMethod],
+	body: render(dropMethod),
 });
 
 const src = render(node);
@@ -134,11 +128,15 @@ impl Drop for Guard {
 ```ts
 import { ifExpression, render } from 'rust-ir';
 
+// Nest ifExpression nodes to produce else-if chains
 const node = ifExpression({
 	condition: 'x > 0',
 	consequence: 'Ok(x)',
-	elseIfClauses: [{ condition: 'x == 0', consequence: 'Ok(0)' }],
-	elseClause: 'Err("negative")',
+	alternative: ifExpression({
+		condition: 'x == 0',
+		consequence: 'Ok(0)',
+		alternative: 'Err("negative")',
+	}),
 });
 
 render(node);
@@ -162,7 +160,7 @@ import { macroInvocation, render } from 'rust-ir';
 
 const node = macroInvocation({
 	macro: 'format',
-	tokens: '"hello {}", name',
+	children: '"hello {}", name',
 });
 
 render(node);
@@ -177,17 +175,10 @@ render(node);
 import { sourceFile, useDeclaration, structItem, implItem, render, validate } from 'rust-ir';
 
 const file = sourceFile({
-	items: [
-		useDeclaration({ path: ['std', 'fmt'], items: ['Display', 'Formatter'] }),
-		structItem({
-			name: 'Point',
-			fields: [
-				{ name: 'x', type: 'f64' },
-				{ name: 'y', type: 'f64' },
-			],
-			derives: ['Debug'],
-		}),
-		implItem({ type: 'Point', methods: [] }),
+	children: [
+		render(useDeclaration({ argument: 'std::fmt::{Display, Formatter}' })),
+		render(structItem({ name: 'Point', body: 'x: f64,\ny: f64,' })),
+		render(implItem({ type: 'Point' })),
 	],
 });
 
@@ -220,7 +211,7 @@ functionItem({ name: 'f' }); // TS error: Property 'body' is missing
 
 ## Validation API
 
-`validate()` parses rendered Rust using the **bundled tree-sitter-rust WASM parser** (no separate install required):
+`validate()` parses rendered Rust using the **`codemod:ast-grep` tree-sitter-rust parser** provided by the JSSG runtime (no separate install required):
 
 ```ts
 import { validate } from 'rust-ir';
@@ -244,7 +235,7 @@ import type { FileContext } from '@codemod.com/jssg-types';
 import { structItem, render, validate } from 'rust-ir';
 
 export function transform(file: FileContext) {
-	const node = structItem({ name: 'Config', fields: [{ name: 'value', type: 'i32' }] });
+	const node = structItem({ name: 'Config', body: 'value: i32,' });
 	const src = render(node);
 	const result = validate(src);
 	if (!result.ok) throw new Error(`IR validation failed: ${JSON.stringify(result.errors)}`);
