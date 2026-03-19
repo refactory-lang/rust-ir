@@ -58,3 +58,18 @@ pnpm typecheck     # type check (tsgo)
 - Package ships TypeScript source directly (`src/index.ts` as main entry); consumers must use a TS-aware bundler or the Codemod JSSG runtime
 - Uses `pnpm` as package manager
 - Type checking via `tsgo` (native TypeScript compiler)
+
+
+### Speckit Workflow
+
+This repo uses [speckit](https://github.com/speckit) for specification-driven development.
+
+- **Specs**: `specs/<NNN-feature-name>/spec.md` — feature specifications
+- **Plans**: `specs/<NNN-feature-name>/plan.md` — implementation plans with tasks
+- **Checklists**: `specs/<NNN-feature-name>/checklists/` — quality gates
+- **Templates**: `.specify/templates/` — spec, plan, task, checklist templates
+- **Extensions**: `.specify/extensions/` — verify, sync, review, workflow hooks
+
+**Branch convention**: Feature branches are named `<NNN>-<short-name>` matching the spec directory (e.g., `001-milestone1-pipeline`).
+
+**Issue → Spec flow**: Issues labeled `spec-ready` trigger the `spec-ready-notify` workflow, which assigns Copilot to run the speckit workflow and produce a spec + plan + tasks.
