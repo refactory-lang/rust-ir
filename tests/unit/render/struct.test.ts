@@ -43,4 +43,14 @@ describe('structItem() + render()', () => {
 	it('throws a descriptive error when name is whitespace-only', () => {
 		expect(() => structItem({ name: '  ' })).toThrow(/name/i);
 	});
+
+	it('renders space-separated modifiers when children is a multi-element array', () => {
+		const node = structItem({
+			name: 'Foo',
+			children: ['pub', 'crate'],
+		});
+		const output = render(node);
+		expect(output).toContain('pub crate struct Foo');
+		expect(output).not.toContain('pub,crate');
+	});
 });
