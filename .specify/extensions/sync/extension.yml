@@ -44,7 +44,7 @@ provides:
 
   config:
     - name: 'sync-config.yml'
-      template: 'sync-config.template.yml'
+      template: 'sync-config.yml'
       description: 'Sync extension configuration'
       required: false
 

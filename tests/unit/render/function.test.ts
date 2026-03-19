@@ -63,4 +63,17 @@ describe('functionItem() + render()', () => {
 		const vr = validate(output);
 		expect(vr.ok).toBe(true);
 	});
+
+	it('renders space-separated modifiers when children is a multi-element array', () => {
+		const node = functionItem({
+			name: 'run',
+			body: 'todo!()',
+			children: ['pub', 'async'],
+		});
+		const output = render(node);
+		expect(output).toContain('pub async fn run');
+		expect(output).not.toContain('pub,async');
+		const vr = validate(output);
+		expect(vr.ok).toBe(true);
+	});
 });

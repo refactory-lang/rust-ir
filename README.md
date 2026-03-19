@@ -8,6 +8,8 @@ Typed Rust IR builder for JSSG transforms — builds structured Rust AST nodes, 
 pnpm add rust-ir
 ```
 
+> **Note:** This package ships TypeScript source (`src/index.ts`). Consumers must use a TS-aware bundler (e.g. Vite, esbuild) or loader (e.g. `ts-node`, `tsx`). It is designed to run inside the [Codemod JSSG](https://docs.codemod.com) runtime, which handles TypeScript compilation natively.
+
 ## Quick Start
 
 ```ts
@@ -16,7 +18,7 @@ import { structItem, functionItem, implItem, sourceFile, render, validate } from
 // Build IR nodes
 const struct = structItem({
   name: 'Config',
-  body: '    host: String,\n    port: u16,',
+  body: 'host: String,\nport: u16,',
   children: ['pub'],
 });
 

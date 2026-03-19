@@ -27,7 +27,7 @@ provides:
 
   config:
     - name: 'verify-config.yml'
-      template: 'config-template.yml'
+      template: 'verify-config.yml'
       description: 'Verify extension configuration'
       required: false
 

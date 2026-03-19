@@ -19,7 +19,7 @@ requires:
 provides:
   config:
     - name: 'review-config.yml'
-      template: 'config-template.yml'
+      template: 'review-config.yml'
       description: 'Review extension configuration — confidence threshold and agent toggles'
       required: false
 
