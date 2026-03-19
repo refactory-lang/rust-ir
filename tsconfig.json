@@ -1,4 +1,4 @@
 {
-	"extends": "@refactory/config/tsconfig.base.json",
+	"extends": "@refactory/config-typescript/tsconfig.base.json",
 	"include": ["src/**/*.ts"]
 }
