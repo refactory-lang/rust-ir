@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@refactory/grammar-types':
+        specifier: github:refactory-lang/grammar-types
+        version: https://codeload.github.com/refactory-lang/grammar-types/tar.gz/fb7d56ed0575f0f47bb799e593e0c8ce3b01fe08(@codemod.com/jssg-types@1.5.0)
     devDependencies:
       '@codemod.com/jssg-types':
         specifier: 1.5.0
@@ -310,6 +314,12 @@ packages:
   '@refactory/config-typescript@https://codeload.github.com/refactory-lang/config-typescript/tar.gz/d964e7c949baf8124c03bc7e4ed26ad17dcc9134':
     resolution: {tarball: https://codeload.github.com/refactory-lang/config-typescript/tar.gz/d964e7c949baf8124c03bc7e4ed26ad17dcc9134}
     version: 0.1.0
+
+  '@refactory/grammar-types@https://codeload.github.com/refactory-lang/grammar-types/tar.gz/fb7d56ed0575f0f47bb799e593e0c8ce3b01fe08':
+    resolution: {tarball: https://codeload.github.com/refactory-lang/grammar-types/tar.gz/fb7d56ed0575f0f47bb799e593e0c8ce3b01fe08}
+    version: 0.1.0
+    peerDependencies:
+      '@codemod.com/jssg-types': '>=1.5.0'
 
   '@rolldown/binding-android-arm64@1.0.0-rc.9':
     resolution: {integrity: sha512-lcJL0bN5hpgJfSIz/8PIf02irmyL43P+j1pTCfbD1DbLkmGRuFIA4DD3B3ZOvGqG0XiVvRznbKtN0COQVaKUTg==}
@@ -929,6 +939,10 @@ snapshots:
     optional: true
 
   '@refactory/config-typescript@https://codeload.github.com/refactory-lang/config-typescript/tar.gz/d964e7c949baf8124c03bc7e4ed26ad17dcc9134': {}
+
+  '@refactory/grammar-types@https://codeload.github.com/refactory-lang/grammar-types/tar.gz/fb7d56ed0575f0f47bb799e593e0c8ce3b01fe08(@codemod.com/jssg-types@1.5.0)':
+    dependencies:
+      '@codemod.com/jssg-types': 1.5.0
 
   '@rolldown/binding-android-arm64@1.0.0-rc.9':
     optional: true

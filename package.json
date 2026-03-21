@@ -16,6 +16,9 @@
 		"lint": "oxlint -c node_modules/@refactory/config-typescript/oxlintrc.json .",
 		"format": "oxfmt --config node_modules/@refactory/config-typescript/oxfmt.json ."
 	},
+	"dependencies": {
+		"@refactory/grammar-types": "github:refactory-lang/grammar-types"
+	},
 	"devDependencies": {
 		"@refactory/config-typescript": "github:refactory-lang/config-typescript",
 		"@codemod.com/jssg-types": "1.5.0",

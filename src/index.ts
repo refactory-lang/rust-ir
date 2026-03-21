@@ -38,3 +38,5 @@ export { implItem } from './nodes/impl.js';
 export { ifExpression } from './nodes/if.js';
 export { macroInvocation } from './nodes/macro.js';
 export { sourceFile } from './nodes/source-file.js';
+
+export { ir } from './fluent.js';
