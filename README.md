@@ -10,10 +10,39 @@ pnpm add rust-ir
 
 > **Note:** This package ships TypeScript source (`src/index.ts`). Consumers must use a TS-aware bundler (e.g. Vite, esbuild) or loader (e.g. `ts-node`, `tsx`). It is designed to run inside the [Codemod JSSG](https://docs.codemod.com) runtime, which handles TypeScript compilation natively.
 
-## Quick Start
+## Quick Start — Fluent Builder API (preferred)
 
 ```ts
-import { structItem, functionItem, implItem, sourceFile, render, validate } from 'rust-ir';
+import { ir, assertValid } from '@refactory/rust-ir';
+
+// Build and render in one chain
+ir.fn('greet').pub().params('name: &str').returns('String').body('format!("Hello, {name}")').render()
+ir.struct('Point').pub().body('pub x: f64,\npub y: f64').render()
+ir.use('std::collections::HashMap').render()
+ir.impl('Foo').trait('Display').body('...').render()
+ir.if('x > 0').then('x').else_('0').render()
+ir.macro('println').args('"hello"').render()
+ir.file([...items]).render()
+```
+
+The `ir.*` namespace implements `BuilderTerminal` from `@refactory/grammar-types`. Each builder chain produces a Rust source string via `.render()`.
+
+### Render and Validation
+
+| Export | Description |
+|--------|-------------|
+| `render(node)` | Render with validation (default) |
+| `renderSilent(node)` | Render without validation |
+| `assertValid(source)` | Throw if source has syntax errors (regex-based) |
+| `validateFast(source)` | Regex-based validation (returns result object) |
+| `validate(source)` | Full tree-sitter parse validation |
+
+## Factory Functions (config-object API)
+
+The original config-object API is still supported:
+
+```ts
+import { structItem, functionItem, implItem, sourceFile, render, validate } from '@refactory/rust-ir';
 
 // Build IR nodes
 const struct = structItem({
@@ -61,13 +90,13 @@ console.log(result.ok); // true
 
 ## Architecture
 
-**Builder → Render → Validate** pipeline:
+**Build → Render → Validate** pipeline:
 
-1. **Build** — factory functions create typed IR nodes from grammar-derived types
-2. **Render** — `render(node)` converts any IR node to a Rust source string
-3. **Validate** — `validate(source)` parses via tree-sitter and checks for `ERROR` nodes
+1. **Build** — fluent builders (`ir.*`) or factory functions create typed IR nodes from grammar-derived types
+2. **Render** — `render(node)` renders with validation, `renderSilent(node)` renders without
+3. **Validate** — `validate(source)` (tree-sitter), `validateFast(source)`/`assertValid(source)` (regex-based)
 
-All node types are 100% grammar-derived from `@codemod.com/jssg-types`. Zero runtime npm dependencies — runs inside the Codemod JSSG runtime.
+All node types are 100% grammar-derived from `@codemod.com/jssg-types`. The `ir.*` fluent namespace implements `BuilderTerminal` from `@refactory/grammar-types`. Zero runtime npm dependencies — runs inside the Codemod JSSG runtime.
 
 ## Development
 

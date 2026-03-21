@@ -14,16 +14,19 @@ Typed Rust IR (Intermediate Representation) builder for JSSG transforms. Part of
 
 ### Architecture
 
-The package follows a **Builder -> Render -> Validate** pipeline:
+The package follows a **Build -> Render -> Validate** pipeline:
 
-1. **Build** -- Factory functions (`src/nodes/*.ts`) create typed IR nodes from grammar-derived types
-2. **Render** -- `render(node)` converts any IR node to a Rust source string
-3. **Validate** -- `validate(source)` parses via tree-sitter and checks for `ERROR` nodes
+1. **Build** -- Fluent builders (`ir.*` namespace) or factory functions (`src/nodes/*.ts`) create typed IR nodes from grammar-derived types
+2. **Render** -- `render(node)` renders with validation (default), `renderSilent(node)` renders without validation
+3. **Validate** -- `validate(source)` parses via tree-sitter, `validateFast(source)`/`assertValid(source)` use regex-based validation
 
-- **Node builders** (`src/nodes/`): 7 factory functions, one per Rust grammar node kind
+- **Fluent builders** (`src/fluent.ts`): `ir.*` namespace implementing `BuilderTerminal` from `@refactory/grammar-types` -- the preferred API
+- **Node builders** (`src/nodes/`): 7 factory functions, one per Rust grammar node kind (config-object API, still supported)
 - **Types** (`src/types.ts`): Grammar-derived TypeScript types for all IR nodes
 - **Render** (`src/render.ts`): Recursive renderer that converts IR nodes to Rust source
+- **Render + Validate** (`src/render-valid.ts`): `render()` (with validation) and `renderSilent()` (without) pipeline
 - **Validate** (`src/validate.ts`): Tree-sitter-based validation for rendered output
+- **Validate Fast** (`src/validate-fast.ts`): Regex-based `validateFast()` and `assertValid()` for lightweight validation
 - **Entry** (`src/index.ts`): Re-exports all public API
 - **Specs** (`specs/`): Implementation specifications
 - **Tests** (`tests/`): Vitest test suite
@@ -40,9 +43,12 @@ pnpm typecheck     # type check (tsgo)
 | File | Purpose |
 |------|---------|
 | `src/index.ts` | Public API re-exports |
+| `src/fluent.ts` | Fluent builder API (`ir.*` namespace), implements `BuilderTerminal` from `@refactory/grammar-types` |
 | `src/types.ts` | Grammar-derived IR node types |
 | `src/render.ts` | IR node -> Rust source string renderer |
+| `src/render-valid.ts` | `render()` (with validation) and `renderSilent()` (without) |
 | `src/validate.ts` | Tree-sitter parse validation |
+| `src/validate-fast.ts` | Regex-based `validateFast()` and `assertValid()` |
 | `src/nodes/struct.ts` | `structItem()` builder |
 | `src/nodes/function.ts` | `functionItem()` builder |
 | `src/nodes/impl.ts` | `implItem()` builder |
