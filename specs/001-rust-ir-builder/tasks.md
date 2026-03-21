@@ -121,7 +121,7 @@
 - [x] T024 [US4] Implement `impl_item` case in `src/render.ts` switch — emit `impl Trait for Type { methods }` or `impl Type { methods }`, render each method via recursive `render()` call on the `FunctionItem`, indent method bodies
 - [x] T025 [US4] Run `tests/unit/render/impl.test.ts` — all cases pass with `validate()` confirming `ok: true`
 
-**Checkpoint**: US4 complete. The Drop translation pattern (`tier2-control.ts`) has a typed IR path.
+**Checkpoint**: US4 complete. The Drop translation pattern (`stage2-control.ts`) has a typed IR path.
 
 ---
 
@@ -138,7 +138,7 @@
 - [x] T028 [US5] Implement `if_expression` case in `src/render.ts` switch — emit `if cond { cons }`, append ` else if cond { cons }` for each clause, append ` else { elseClause }` when present
 - [x] T029 [US5] Run `tests/unit/render/if.test.ts` — all cases pass with `validate()` confirming `ok: true`
 
-**Checkpoint**: US5 complete. Typed if/elif/else IR available for `tier1-syntax.ts` refactor.
+**Checkpoint**: US5 complete. Typed if/elif/else IR available for `stage1-syntax.ts` refactor.
 
 ---
 
@@ -182,7 +182,7 @@
 
 - [x] T038 Run `npx tsc --noEmit` across entire project — fix any remaining strict-mode errors in `src/` and `tests/`; target: zero TypeScript errors (SC-003)
 - [x] T039 [P] Write and run integration test in `tests/integration/jssg-compat.test.ts` — create a minimal JSSG transform fixture at `tests/fixtures/simple-struct.transform.ts` that imports `structItem`, `render`, `validate` from `rust-ir`; the test invokes the codemod runner against a trivial input fixture, asserts no runtime errors and `validate()` returns `ok: true` using the JSSG runtime's live `codemod:ast-grep` parser (no mock); confirms SC-005
-- [ ] T040 Refactor `tier1-syntax.ts` in the Python-to-Rust refactory repo (`refactory-python-to-rust-phase0/` — sibling directory of this repo, branch `main`) to replace struct string-concatenation with `structItem()` + `render()` — run that repo's existing test suite to confirm Rust output is byte-identical to pre-refactor (SC-004). Coordinate: ensure `rust-ir` is published (or path-linked) before executing this task.
+- [ ] T040 Refactor `stage1-syntax.ts` in the Python-to-Rust refactory repo (`refactory-python-to-rust-phase0/` — sibling directory of this repo, branch `main`) to replace struct string-concatenation with `structItem()` + `render()` — run that repo's existing test suite to confirm Rust output is byte-identical to pre-refactor (SC-004). Coordinate: ensure `rust-ir` is published (or path-linked) before executing this task.
 - [x] T041 [P] Run full Vitest suite (`npx vitest run`) — all unit and integration tests pass; confirm SC-001 (7 node kinds all have passing round-trip tests), SC-002 (validate detects malformed Rust in all negative cases), SC-003 (zero TS errors)
 
 **Checkpoint**: All success criteria met. Library ready for merge.
@@ -224,7 +224,7 @@ Phase 1 (Setup)
 2. **Sprint 2**: Phase 6 + 7 + 8 (use, impl, if — all P2)
 3. **Sprint 3**: Phase 9 + 10 (macro, source file — both P3) + Phase 11 (polish, integration test, SC-004 refactor)
 
-**Do NOT begin Phase 11 (polish)** until all 7 node kind tests pass — the `tier1-syntax.ts` refactor (T040) requires a complete, stable library.
+**Do NOT begin Phase 11 (polish)** until all 7 node kind tests pass — the `stage1-syntax.ts` refactor (T040) requires a complete, stable library.
 
 ---
 

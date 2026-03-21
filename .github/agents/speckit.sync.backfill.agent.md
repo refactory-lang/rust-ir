@@ -4,9 +4,9 @@ tools: []
 scripts: []
 ---
 
+
 <!-- Extension: sync -->
 <!-- Config: .specify/extensions/sync/ -->
-
 # Spec Sync: Backfill Spec
 
 Generate a complete spec from an existing, unspecced code feature. Extracts intent from implementation, tests, and documentation.
@@ -16,7 +16,6 @@ Generate a complete spec from an existing, unspecced code feature. Extracts inte
 $ARGUMENTS
 
 The argument should be one of:
-
 - A feature name (e.g., "reconciliation", "hints")
 - A file path (e.g., "src/Fina.Cli/Commands/Register/RegisterReconcileCommand.cs")
 - An identifier from the drift report (e.g., "unspecced-3")
@@ -24,7 +23,6 @@ The argument should be one of:
 ## Context
 
 If a feature name is provided, search for relevant files:
-
 - Commands with that name
 - Services with that name
 - Tests for that feature
@@ -55,27 +53,23 @@ find docs -name "*[feature]*"
 Read the discovered files and extract:
 
 **From Commands:**
-
 - Command name and description
 - Options and arguments
 - Validation rules
 - Error handling
 
 **From Services:**
-
 - Public methods (these become requirements)
 - Business logic rules
 - Dependencies on other services
 - Edge case handling
 
 **From Tests:**
-
 - Test scenarios (become acceptance scenarios)
 - Expected behaviors
 - Edge cases tested
 
 **From Existing Docs:**
-
 - Any informal documentation
 - README sections
 - Comments explaining "why"
@@ -100,27 +94,21 @@ so that [benefit inferred from feature purpose].
 Convert implementation behaviors to requirements:
 
 **From method signatures:**
-
 ```csharp
 public async Task<ReconcileResult> ReconcileAsync(string profileName, ...)
 ```
-
 → `FR-001: System MUST support reconciliation per profile.`
 
 **From validation:**
-
 ```csharp
 if (!_authService.IsAuthenticated) throw ...
 ```
-
 → `FR-002: System MUST validate authentication before reconciliation.`
 
 **From business logic:**
-
 ```csharp
 var matches = _fuzzyMatcher.FindMatches(transactions, registryRows, threshold: 0.85);
 ```
-
 → `FR-003: System MUST use fuzzy matching with configurable threshold to match transactions.`
 
 ### 5. Generate Spec Structure
@@ -144,7 +132,6 @@ Follow the standard spec template:
 ## User Scenarios & Testing
 
 ### User Story 1 - [Story] (Priority: P1)
-
 [generated user story]
 
 ## Requirements
@@ -207,7 +194,6 @@ Create `plan.md` documenting the implementation architecture:
 
 **Language/Version**: [detected from project]
 **Primary Dependencies**:
-
 - [Service 1] — [purpose]
 - [Service 2] — [purpose]
 
@@ -216,14 +202,13 @@ Create `plan.md` documenting the implementation architecture:
 ## Architecture
 
 ### Service Layer
-```
 
+```
 [Main Service]
 ├── [Dependency 1]
 ├── [Dependency 2]
 └── [Dependency 3]
-
-````
+```
 
 ### Flow
 
@@ -241,7 +226,7 @@ Create `plan.md` documenting the implementation architecture:
 ```text
 src/[paths discovered]
 tests/[paths discovered]
-````
+```
 
 ## Dependencies
 
@@ -254,8 +239,7 @@ tests/[paths discovered]
 ## Future Considerations
 
 [Any TODOs or comments suggesting future work]
-
-````
+```
 
 ### 8. Generate Quickstart
 
@@ -276,25 +260,23 @@ For user-facing features (CLI commands), create `quickstart.md`:
 ```bash
 # [Primary use case]
 fina [command] [args]
-````
+```
 
 ## Options
 
-| Option      | Description   |
-| ----------- | ------------- |
+| Option | Description |
+|--------|-------------|
 | `--option1` | [description] |
 | `--option2` | [description] |
 
 ## Examples
 
 ### [Use case 1]
-
 ```bash
 fina [command] [example]
 ```
 
 ### [Use case 2]
-
 ```bash
 fina [command] [example]
 ```
@@ -303,8 +285,7 @@ fina [command] [example]
 
 - [Tip 1]
 - [Tip 2]
-
-````
+```
 
 Skip `quickstart.md` for internal/non-user-facing features.
 
@@ -334,7 +315,7 @@ Add a task to review the backfilled spec:
 - [ ] Remove implementation notes that don't belong in spec
 - [ ] Add any missing requirements
 - [ ] Mark spec status as "Draft" or "Approved"
-````
+```
 
 ## Example Usage
 

@@ -12,9 +12,12 @@
 	},
 	"scripts": {
 		"test": "vitest run",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsgo --noEmit",
+		"lint": "oxlint -c node_modules/@refactory/config-typescript/oxlintrc.json .",
+		"format": "oxfmt --config node_modules/@refactory/config-typescript/oxfmt.json ."
 	},
 	"devDependencies": {
+		"@refactory/config-typescript": "github:refactory-lang/config-typescript",
 		"@codemod.com/jssg-types": "1.5.0",
 		"@typescript/native-preview": "7.0.0-dev.20260317.1",
 		"oxfmt": "^0.41.0",

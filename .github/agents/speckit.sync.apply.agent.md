@@ -4,9 +4,9 @@ tools: []
 scripts: []
 ---
 
+
 <!-- Extension: sync -->
 <!-- Config: .specify/extensions/sync/ -->
-
 # Spec Sync: Apply Resolutions
 
 Apply approved resolutions from the proposals file. Updates specs or generates implementation tasks.
@@ -24,7 +24,6 @@ $ARGUMENTS
 ## Context
 
 Read:
-
 - `.specify/sync/proposals.json` - proposals with approval status
 - Original spec files that need updating
 
@@ -35,7 +34,6 @@ Read:
 Read proposals and filter to those marked `approved: true`.
 
 If no proposals are approved:
-
 - In interactive mode: prompt to review proposals first
 - In batch mode: exit with "No approved proposals to apply"
 
@@ -51,14 +49,13 @@ For each approved BACKFILL proposal:
 6. Write the updated spec
 
 Track changes:
-
 ```json
 {
-	"spec": "spec-011",
-	"requirement": "FR-001",
-	"before": "original text",
-	"after": "updated text",
-	"applied_at": "timestamp"
+  "spec": "spec-011",
+  "requirement": "FR-001",
+  "before": "original text",
+  "after": "updated text",
+  "applied_at": "timestamp"
 }
 ```
 
@@ -80,7 +77,6 @@ For ALIGN proposals (spec → code), don't modify code directly. Instead:
 3. Optionally create GitHub issues if `--create-issues` is passed
 
 Task format:
-
 ```markdown
 ## Task: Align [spec-id]/[requirement]
 
@@ -91,7 +87,6 @@ Task format:
 **Estimated Effort**: [small/medium/large]
 
 ### Acceptance Criteria
-
 - [ ] [criterion 1]
 - [ ] [criterion 2]
 ```
@@ -114,24 +109,20 @@ Applied: [timestamp]
 ## Changes Made
 
 ### Specs Updated
-
-| Spec     | Requirement | Change Type |
-| -------- | ----------- | ----------- |
-| spec-011 | FR-001      | Modified    |
-| spec-011 | FR-015      | Added       |
+| Spec | Requirement | Change Type |
+|------|-------------|-------------|
+| spec-011 | FR-001 | Modified |
+| spec-011 | FR-015 | Added |
 
 ### New Specs Created
-
 - spec-013-reconciliation
 
 ### Implementation Tasks Generated
-
 - 3 tasks in `.specify/sync/align-tasks.md`
 
 ### Not Applied
-
-| Proposal        | Reason       |
-| --------------- | ------------ |
+| Proposal | Reason |
+|----------|--------|
 | spec-008/FR-003 | Not approved |
 
 ## Next Steps
@@ -144,7 +135,6 @@ Applied: [timestamp]
 ### 7. Save Report
 
 Write to:
-
 - `.specify/sync/apply-report.md`
 - `.specify/sync/apply-report.json`
 
