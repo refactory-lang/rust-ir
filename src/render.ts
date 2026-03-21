@@ -23,7 +23,7 @@ function indent(text: string): string {
  * Pure function — no side effects. Dispatches by `node.kind` to a
  * per-kind renderer. All 7 supported node kinds are handled exhaustively.
  */
-export function render(node: RustIrNode): string {
+export function renderSilent(node: RustIrNode): string {
 	switch (node.kind) {
 		case 'struct_item':
 			return renderStruct(node);
@@ -58,7 +58,7 @@ export function render(node: RustIrNode): string {
 function renderChild(item: unknown): string {
 	if (typeof item === 'string') return item;
 	if (typeof item === 'object' && item !== null && 'kind' in item) {
-		return render(item as RustIrNode);
+		return renderSilent(item as RustIrNode);
 	}
 	throw new Error(
 		`render: expected a string or RustIrNode, got ${typeof item}: ${String(item).slice(0, 80)}`,
@@ -128,7 +128,7 @@ function renderImpl(node: ImplItem): string {
 		bodyStr = (bodyVal as unknown[]).map((item) => indent(renderChild(item))).join('\n');
 	} else if (typeof bodyVal === 'object' && bodyVal !== null && 'kind' in bodyVal) {
 		// Single IR node (e.g., one method) — render and indent
-		bodyStr = indent(render(bodyVal as RustIrNode));
+		bodyStr = indent(renderSilent(bodyVal as RustIrNode));
 	} else if (typeof bodyVal === 'string') {
 		// Pre-rendered string body — auto-indent for consistency with node/array paths
 		bodyStr = indent(bodyVal);

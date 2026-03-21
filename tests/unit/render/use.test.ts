@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '../../../src/render.js';
+import { renderSilent as render } from '../../../src/render.js';
 import { validate } from '../../../src/validate.js';
 import { useDeclaration } from '../../../src/nodes/use.js';
 

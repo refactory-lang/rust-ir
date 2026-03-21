@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '../../../src/render.js';
+import { renderSilent as render } from '../../../src/render.js';
 import { validate } from '../../../src/validate.js';
 import { implItem } from '../../../src/nodes/impl.js';
 import { functionItem } from '../../../src/nodes/function.js';

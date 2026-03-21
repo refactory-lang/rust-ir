@@ -1,11 +1,11 @@
 /**
  * Render an IR node to Rust source and validate the result.
- * Combines `render()` + `assertValid()` into a single call.
+ * This is the default render function — use `renderSilent` to skip validation.
  */
 import type { RustIrNode } from './types.js';
-import { render } from './render.js';
+import { renderSilent } from './render.js';
 import { assertValid } from './validate-fast.js';
 
-export function renderValid(node: RustIrNode): string {
-	return assertValid(render(node));
+export function render(node: RustIrNode): string {
+	return assertValid(renderSilent(node));
 }
