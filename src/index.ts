@@ -28,6 +28,7 @@ export type {
 
 export { render } from './render.js';
 export { validate } from './validate.js';
+export { validateFast, assertValid } from './validate-fast.js';
 
 export { structItem } from './nodes/struct.js';
 export { functionItem } from './nodes/function.js';
