@@ -27,6 +27,7 @@ export type {
 } from './types.js';
 
 export { render } from './render.js';
+export { renderValid } from './render-valid.js';
 export { validate } from './validate.js';
 export { validateFast, assertValid } from './validate-fast.js';
 
