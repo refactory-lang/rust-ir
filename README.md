@@ -1,6 +1,6 @@
 # rust-ir
 
-Typed Rust IR builder for JSSG transforms — builds structured Rust AST nodes, renders to source, validates via tree-sitter parse.
+Typed Rust IR builder for JSSG transforms -- builds structured Rust AST nodes, renders to source, validates via tree-sitter parse. **Generated from `@refactory/ir-codegen`** with 134 node kinds from the tree-sitter-rust grammar.
 
 ## Install
 
@@ -10,22 +10,49 @@ pnpm add rust-ir
 
 > **Note:** This package ships TypeScript source (`src/index.ts`). Consumers must use a TS-aware bundler (e.g. Vite, esbuild) or loader (e.g. `ts-node`, `tsx`). It is designed to run inside the [Codemod JSSG](https://docs.codemod.com) runtime, which handles TypeScript compilation natively.
 
-## Quick Start — Fluent Builder API (preferred)
+## Quick Start -- Fluent Builder API (preferred)
 
 ```ts
-import { ir, assertValid } from '@refactory/rust-ir';
+import { ir } from '@refactory/rust-ir';
 
-// Build and render in one chain
-ir.fn('greet').pub().params('name: &str').returns('String').body('format!("Hello, {name}")').render()
-ir.struct('Point').pub().body('pub x: f64,\npub y: f64').render()
-ir.use('std::collections::HashMap').render()
-ir.impl('Foo').trait('Display').body('...').render()
-ir.if('x > 0').then('x').else_('0').render()
-ir.macro('println').args('"hello"').render()
-ir.file([...items]).render()
+// Build nodes bottom-up
+const items = [
+  ir.attributeItem('derive(Debug, Clone)').build(),
+  ir.structItem('Point').children(['pub']).body('pub x: f64,\npub y: f64').build(),
+  ir.fn('main').body('let p = Point { x: 1.0, y: 2.0 };').build(),
+];
+
+// Render once at root
+const source = ir.file().children(items as any).render();
 ```
 
-The `ir.*` namespace implements `BuilderTerminal` from `@refactory/grammar-types`. Each builder chain produces a Rust source string via `.render()`.
+### More examples
+
+```ts
+// Use declaration
+ir.useDeclaration('std::collections::HashMap').build()
+
+// Function with parameters and return type
+ir.fn('greet').children(['pub']).parameters('name: &str').returnType('String')
+  .body('format!("Hello, {name}")').build()
+
+// Struct with visibility
+ir.structItem('Point').children(['pub']).body('pub x: f64,\npub y: f64').build()
+
+// Impl block
+ir.implItem('Foo').trait('Display').body('...').build()
+
+// Attribute (eliminates raw strings)
+ir.attributeItem('derive(Debug, Clone)').build()
+
+// Macro invocation
+ir.macro_invocation('println').build()
+
+// Compose and render at root
+ir.file().children([...nodes] as any).render()
+```
+
+The `ir.*` namespace implements `BuilderTerminal` from `@refactory/grammar-types`. Each builder uses `.build()` for composition and `.render()` at the root.
 
 ### Render and Validation
 
@@ -39,7 +66,7 @@ The `ir.*` namespace implements `BuilderTerminal` from `@refactory/grammar-types
 
 ## Factory Functions (config-object API)
 
-The original config-object API is still supported:
+The config-object API is still supported:
 
 ```ts
 import { structItem, functionItem, implItem, sourceFile, render, validate } from '@refactory/rust-ir';
@@ -78,29 +105,52 @@ console.log(result.ok); // true
 
 ## Supported Node Kinds
 
-| Builder | Grammar Node | Required Fields |
+134 node kinds generated from tree-sitter-rust grammar. Key builders:
+
+| Fluent key | Grammar Node | Primary field |
 |---|---|---|
-| `structItem()` | `struct_item` | `name` |
-| `functionItem()` | `function_item` | `name`, `body` |
-| `useDeclaration()` | `use_declaration` | `argument` |
-| `implItem()` | `impl_item` | `type` |
-| `ifExpression()` | `if_expression` | `condition`, `consequence` |
-| `macroInvocation()` | `macro_invocation` | `macro`, `children` |
-| `sourceFile()` | `source_file` | `children` |
+| `ir.structItem(name)` | `struct_item` | `name` |
+| `ir.fn(name)` | `function_item` | `name` |
+| `ir.useDeclaration(arg)` | `use_declaration` | `argument` |
+| `ir.implItem(type)` | `impl_item` | `type` |
+| `ir.ifExpression(cond)` | `if_expression` | `condition` |
+| `ir.macro_invocation(name)` | `macro_invocation` | `macro` |
+| `ir.attributeItem(value)` | `attribute_item` | `value` |
+| `ir.file()` | `source_file` | `children` |
+
+See `src/nodes/` for all 134 generated builders.
 
 ## Architecture
 
-**Build → Render → Validate** pipeline:
+**Build -> Render -> Validate** pipeline:
 
-1. **Build** — fluent builders (`ir.*`) or factory functions create typed IR nodes from grammar-derived types
-2. **Render** — `render(node)` renders with validation, `renderSilent(node)` renders without
-3. **Validate** — `validate(source)` (tree-sitter), `validateFast(source)`/`assertValid(source)` (regex-based)
+1. **Build** -- fluent builders (`ir.*`) or factory functions create typed IR nodes from grammar-derived types
+2. **Render** -- `render(node)` renders with validation, `renderSilent(node)` renders without
+3. **Validate** -- `validate(source)` (tree-sitter), `validateFast(source)`/`assertValid(source)` (regex-based)
 
-All node types are 100% grammar-derived from `@codemod.com/jssg-types`. The `ir.*` fluent namespace implements `BuilderTerminal` from `@refactory/grammar-types`. Zero runtime npm dependencies — runs inside the Codemod JSSG runtime.
+All node types are 100% grammar-derived from `@codemod.com/jssg-types`. The `ir.*` fluent namespace implements `BuilderTerminal` from `@refactory/grammar-types`. Zero runtime npm dependencies -- runs inside the Codemod JSSG runtime.
+
+### Generated vs hand-written
+
+| File | Source |
+|------|--------|
+| `src/types.ts` | Generated by ir-codegen |
+| `src/fluent.ts` | Generated by ir-codegen |
+| `src/nodes/*.ts` | Generated by ir-codegen (134 files) |
+| `src/render.ts` | Hand-written |
+| `src/render-valid.ts` | Hand-written |
+| `src/validate-fast.ts` | Hand-written |
 
 ## Development
 
 ```sh
 pnpm test          # run tests (vitest)
 pnpm typecheck     # type check (tsgo)
+```
+
+### Regenerating from ir-codegen
+
+```sh
+cd ../ir-codegen
+npx tsx scripts/generate-rust-ir.ts ../rust-ir/src
 ```
