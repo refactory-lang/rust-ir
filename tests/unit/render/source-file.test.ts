@@ -3,7 +3,7 @@ import { renderSilent as render } from '../../../src/render.js';
 import { validate } from '../../../src/validate.js';
 import { sourceFile } from '../../../src/nodes/source-file.js';
 import { useDeclaration } from '../../../src/nodes/use.js';
-import { structItem } from '../../../src/nodes/struct.js';
+import { structItem } from '../../../src/nodes/struct-item.js';
 import { implItem } from '../../../src/nodes/impl.js';
 import { functionItem } from '../../../src/nodes/function.js';
 
@@ -44,10 +44,6 @@ describe('sourceFile() + render()', () => {
 		expect(output).not.toMatch(/\n\n/);
 		const vr = validate(output);
 		expect(vr.ok).toBe(true);
-	});
-
-	it('throws when children array is empty', () => {
-		expect(() => sourceFile({ children: [] })).toThrow(/children/i);
 	});
 
 	it('renders sourceFile with IR node children directly (renderChild IR-node path)', () => {

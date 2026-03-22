@@ -1,27 +1,72 @@
+import type { BuilderTerminal } from '@refactory/grammar-types';
 import type { FunctionItem, FunctionItemConfig } from '../types.js';
+import { renderSilent } from '../render.js';
+import { assertValid } from '../validate-fast.js';
 
-/**
- * Build a `function_item` IR node.
- * @throws {Error} if `name` or `body` is empty or whitespace-only.
- */
 export function functionItem(config: FunctionItemConfig): FunctionItem {
-	if (typeof config.name !== 'string' || config.name.trim().length === 0) {
-		throw new Error(
-			`functionItem: name must be a non-empty string, got: ${JSON.stringify(config.name)}`,
-		);
-	}
-	if (typeof config.body !== 'string' || config.body.trim().length === 0) {
-		throw new Error(
-			`functionItem: body must be a non-empty string, got: ${JSON.stringify(config.body)}`,
-		);
-	}
-	return {
-		kind: 'function_item',
-		name: config.name as FunctionItem['name'],
-		parameters: config.parameters as FunctionItem['parameters'],
-		returnType: config.returnType as FunctionItem['returnType'],
-		body: config.body as unknown as FunctionItem['body'],
-		typeParameters: config.typeParameters as FunctionItem['typeParameters'],
-		children: config.children as FunctionItem['children'],
-	};
+  return {
+    kind: 'function_item',
+    ...config,
+  } as FunctionItem;
+}
+
+class FunctionBuilder implements BuilderTerminal<FunctionItem> {
+  private _body: string;
+  private _name: string;
+  private _parameters: string;
+  private _returnType?: string;
+  private _typeParameters?: string;
+  private _children: string[] = [];
+
+  constructor(name: string) {
+    this._name = name;
+  }
+
+  body(value: string): this {
+    this._body = value;
+    return this;
+  }
+
+  parameters(value: string): this {
+    this._parameters = value;
+    return this;
+  }
+
+  returnType(value: string): this {
+    this._returnType = value;
+    return this;
+  }
+
+  typeParameters(value: string): this {
+    this._typeParameters = value;
+    return this;
+  }
+
+  children(value: string[]): this {
+    this._children = value;
+    return this;
+  }
+
+  build(): FunctionItem {
+    return functionItem({
+      body: this._body,
+      name: this._name,
+      parameters: this._parameters,
+      returnType: this._returnType,
+      typeParameters: this._typeParameters,
+      children: this._children,
+    } as FunctionItemConfig);
+  }
+
+  render(): string {
+    return assertValid(renderSilent(this.build()));
+  }
+
+  renderSilent(): string {
+    return renderSilent(this.build());
+  }
+}
+
+export function fn(name: string): FunctionBuilder {
+  return new FunctionBuilder(name);
 }

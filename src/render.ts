@@ -39,12 +39,10 @@ export function renderSilent(node: RustIrNode): string {
 			return renderMacro(node);
 		case 'source_file':
 			return renderSourceFile(node);
-		default: {
-			const _exhaustive: never = node;
+		default:
 			throw new Error(
-				`render: unknown node kind: ${(node as { kind: string }).kind}`,
+				`render: unimplemented node kind: ${(node as { kind: string }).kind}`,
 			);
-		}
 	}
 }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderSilent as render } from '../../../src/render.js';
 import { validate } from '../../../src/validate.js';
-import { structItem } from '../../../src/nodes/struct.js';
+import { structItem } from '../../../src/nodes/struct-item.js';
 
 describe('structItem() + render()', () => {
 	it('renders a named-field pub struct that validates ok', () => {
@@ -34,14 +34,6 @@ describe('structItem() + render()', () => {
 		expect(output).toContain('struct Inner');
 		const vr = validate(output);
 		expect(vr.ok).toBe(true);
-	});
-
-	it('throws a descriptive error when name is empty', () => {
-		expect(() => structItem({ name: '' })).toThrow(/name/i);
-	});
-
-	it('throws a descriptive error when name is whitespace-only', () => {
-		expect(() => structItem({ name: '  ' })).toThrow(/name/i);
 	});
 
 	it('renders space-separated modifiers when children is a multi-element array', () => {

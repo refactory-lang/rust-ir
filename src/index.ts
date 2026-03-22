@@ -1,13 +1,8 @@
 // Public entry point for the rust-ir library.
+// Auto-generated types + hand-written render/validate pipeline.
+
 export type {
 	RustGrammar,
-	RustNodeKind,
-	RustNamedKind,
-	RustNodeText,
-	RustFieldText,
-	NodeBuilderInput,
-	FieldDeclaration,
-	ParameterDeclaration,
 	StructItem,
 	StructItemConfig,
 	FunctionItem,
@@ -31,12 +26,12 @@ export { renderSilent } from './render.js';
 export { validate } from './validate.js';
 export { validateFast, assertValid } from './validate-fast.js';
 
-export { structItem } from './nodes/struct.js';
+export { structItem } from './nodes/struct-item.js';
 export { functionItem } from './nodes/function.js';
 export { useDeclaration } from './nodes/use.js';
 export { implItem } from './nodes/impl.js';
 export { ifExpression } from './nodes/if.js';
-export { macroInvocation } from './nodes/macro.js';
+export { macroInvocation } from './nodes/macro-invocation.js';
 export { sourceFile } from './nodes/source-file.js';
 
 export { ir } from './fluent.js';

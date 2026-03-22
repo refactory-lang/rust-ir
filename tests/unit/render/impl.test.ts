@@ -39,14 +39,6 @@ describe('implItem() + render()', () => {
 		expect(vr.ok).toBe(true);
 	});
 
-	it('throws a descriptive error when type is empty', () => {
-		expect(() => implItem({ type: '' })).toThrow(/type/i);
-	});
-
-	it('throws when type is whitespace-only', () => {
-		expect(() => implItem({ type: '   ' })).toThrow(/type/i);
-	});
-
 	it('renders an impl with array body of IR nodes that validates ok', () => {
 		const method1 = functionItem({ name: 'new', body: 'Self { x: 0 }', returnType: 'Self' });
 		const method2 = functionItem({

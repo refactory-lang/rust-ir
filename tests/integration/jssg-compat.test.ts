@@ -96,7 +96,7 @@ describe('JSSG transform fixture — rust-ir API compatibility', () => {
 describe('render() edge cases', () => {
 	it('throws on unknown node kind at runtime', () => {
 		const bogus = { kind: 'bogus_node' } as never;
-		expect(() => render(bogus)).toThrow(/unknown node kind/i);
+		expect(() => render(bogus)).toThrow(/node kind/i);
 	});
 
 	it('throws when renderChild receives a non-string non-node value via sourceFile', () => {

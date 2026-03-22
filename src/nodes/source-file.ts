@@ -1,17 +1,40 @@
+import type { BuilderTerminal } from '@refactory/grammar-types';
 import type { SourceFile, SourceFileConfig } from '../types.js';
+import { renderSilent } from '../render.js';
+import { assertValid } from '../validate-fast.js';
 
-/**
- * Build a `source_file` IR node.
- * @throws {Error} if `children` is missing or an empty array.
- */
 export function sourceFile(config: SourceFileConfig): SourceFile {
-	if (!Array.isArray(config.children) || config.children.length === 0) {
-		throw new Error(
-			`sourceFile: children must be a non-empty array, got: ${JSON.stringify(config.children)}`,
-		);
-	}
-	return {
-		kind: 'source_file',
-		children: config.children as SourceFile['children'],
-	};
+  return {
+    kind: 'source_file',
+    ...config,
+  } as SourceFile;
+}
+
+class SourceFileBuilder implements BuilderTerminal<SourceFile> {
+  private _children: string[] = [];
+
+  constructor() {}
+
+  children(value: string[]): this {
+    this._children = value;
+    return this;
+  }
+
+  build(): SourceFile {
+    return sourceFile({
+      children: this._children,
+    } as SourceFileConfig);
+  }
+
+  render(): string {
+    return assertValid(renderSilent(this.build()));
+  }
+
+  renderSilent(): string {
+    return renderSilent(this.build());
+  }
+}
+
+export function file(): SourceFileBuilder {
+  return new SourceFileBuilder();
 }

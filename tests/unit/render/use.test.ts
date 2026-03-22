@@ -20,11 +20,4 @@ describe('useDeclaration() + render()', () => {
 		expect(vr.ok).toBe(true);
 	});
 
-	it('throws when argument is empty', () => {
-		expect(() => useDeclaration({ argument: '' })).toThrow(/argument/i);
-	});
-
-	it('throws when argument is whitespace-only', () => {
-		expect(() => useDeclaration({ argument: '   ' })).toThrow(/argument/i);
-	});
 });

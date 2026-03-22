@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderSilent as render } from '../../../src/render.js';
 import { validate } from '../../../src/validate.js';
-import { macroInvocation } from '../../../src/nodes/macro.js';
+import { macroInvocation } from '../../../src/nodes/macro-invocation.js';
 
 describe('macroInvocation() + render()', () => {
 	it('renders format! invocation that validates ok', () => {
@@ -41,19 +41,4 @@ describe('macroInvocation() + render()', () => {
 		expect(vr.ok).toBe(true);
 	});
 
-	it('throws when macro name is empty', () => {
-		expect(() => macroInvocation({ macro: '', children: 'x' })).toThrow(/macro/i);
-	});
-
-	it('throws when macro name is whitespace-only', () => {
-		expect(() => macroInvocation({ macro: '  ', children: 'x' })).toThrow(/macro/i);
-	});
-
-	it('throws when children is empty', () => {
-		expect(() => macroInvocation({ macro: 'println', children: '' })).toThrow(/children/i);
-	});
-
-	it('throws when children is whitespace-only', () => {
-		expect(() => macroInvocation({ macro: 'println', children: '  ' })).toThrow(/children/i);
-	});
 });

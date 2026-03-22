@@ -1,21 +1,65 @@
+import type { BuilderTerminal } from '@refactory/grammar-types';
 import type { ImplItem, ImplItemConfig } from '../types.js';
+import { renderSilent } from '../render.js';
+import { assertValid } from '../validate-fast.js';
 
-/**
- * Build an `impl_item` IR node.
- * @throws {Error} if `type` is empty or whitespace-only.
- */
 export function implItem(config: ImplItemConfig): ImplItem {
-	if (typeof config.type !== 'string' || config.type.trim().length === 0) {
-		throw new Error(
-			`implItem: type must be a non-empty string, got: ${JSON.stringify(config.type)}`,
-		);
-	}
-	return {
-		kind: 'impl_item',
-		type: config.type as ImplItem['type'],
-		trait: config.trait as ImplItem['trait'],
-		body: config.body as ImplItem['body'],
-		typeParameters: config.typeParameters as ImplItem['typeParameters'],
-		children: config.children as ImplItem['children'],
-	};
+  return {
+    kind: 'impl_item',
+    ...config,
+  } as ImplItem;
+}
+
+class ImplBuilder implements BuilderTerminal<ImplItem> {
+  private _body?: string;
+  private _trait?: string;
+  private _type: string;
+  private _typeParameters?: string;
+  private _children?: string;
+
+  constructor(type_: string) {
+    this._type = type_;
+  }
+
+  body(value: string): this {
+    this._body = value;
+    return this;
+  }
+
+  trait(value: string): this {
+    this._trait = value;
+    return this;
+  }
+
+  typeParameters(value: string): this {
+    this._typeParameters = value;
+    return this;
+  }
+
+  children(value: string): this {
+    this._children = value;
+    return this;
+  }
+
+  build(): ImplItem {
+    return implItem({
+      body: this._body,
+      trait: this._trait,
+      type: this._type,
+      typeParameters: this._typeParameters,
+      children: this._children,
+    } as ImplItemConfig);
+  }
+
+  render(): string {
+    return assertValid(renderSilent(this.build()));
+  }
+
+  renderSilent(): string {
+    return renderSilent(this.build());
+  }
+}
+
+export function impl(type_: string): ImplBuilder {
+  return new ImplBuilder(type_);
 }

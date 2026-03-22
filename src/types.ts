@@ -1,339 +1,545 @@
-/**
- * Shared types for the rust-ir library.
- *
- * All IR nodes are plain TypeScript objects (discriminated union).
- * The `kind` field matches the corresponding tree-sitter-rust grammar node
- * type name exactly (per Constitution Principle I: Grammar Fidelity).
- *
- * Every node shape is derived 100% from the grammar — zero hand-rolled
- * field definitions.  Field names are CamelCase-converted at the type level
- * (e.g. `return_type` → `returnType`) with an optional ergonomic alias
- * map for readability (e.g. `pattern` → `name` on `parameter`).
- */
-
 import type RustTypes from '@codemod.com/jssg-types/langs/rust';
-import type { Kinds } from '@codemod.com/jssg-types/main';
-import type {
-	CamelCase,
-	OptionalKeysOf,
-	RequiredKeysOf,
-	SetOptional,
-	Simplify,
-	SimplifyDeep,
-} from 'type-fest';
-
-// ---------------------------------------------------------------------------
-// Grammar primitives
-// ---------------------------------------------------------------------------
+import type { NodeType, BuilderConfig, ValidationResult } from '@refactory/grammar-types';
 
 export type RustGrammar = RustTypes;
-export type RustNodeKind = keyof RustGrammar & string;
-export type RustNamedKind = Kinds<RustGrammar>;
 
-type RustTextBrand<K extends string> = string & {
-	readonly __rustKinds: K;
-};
+export type AbstractType = NodeType<RustGrammar, 'abstract_type'>;
+export type AbstractTypeConfig = BuilderConfig<RustGrammar, AbstractType>;
 
-type GrammarTypeRef = {
-	readonly type: string;
-};
+export type Arguments = NodeType<RustGrammar, 'arguments'>;
+export type ArgumentsConfig = BuilderConfig<RustGrammar, Arguments>;
 
-type GrammarSlotInfo = {
-	readonly multiple: boolean;
-	readonly required: boolean;
-	readonly types: readonly GrammarTypeRef[];
-};
+export type ArrayExpression = NodeType<RustGrammar, 'array_expression'>;
+export type ArrayExpressionConfig = BuilderConfig<RustGrammar, ArrayExpression>;
 
-type SlotKinds<Info> = Info extends { types: infer Types extends readonly GrammarTypeRef[] }
-	? Extract<Types[number]['type'], string>
-	: never;
+export type ArrayType = NodeType<RustGrammar, 'array_type'>;
+export type ArrayTypeConfig = BuilderConfig<RustGrammar, ArrayType>;
 
-// ---------------------------------------------------------------------------
-// Cycle-detected recursion  (visited-set pattern)
-//
-// Instead of a fixed depth limit, we track which node kinds have already
-// been expanded in a tuple used as a set.  When a kind appears that is
-// already in the visited set we've found a cycle and emit a branded-string
-// leaf instead of recursing further.  This gives maximal expansion with
-// natural termination.
-// ---------------------------------------------------------------------------
+export type AssignmentExpression = NodeType<RustGrammar, 'assignment_expression'>;
+export type AssignmentExpressionConfig = BuilderConfig<RustGrammar, AssignmentExpression>;
 
-/** Check if string literal T is already in the Visited tuple. */
-type Contains<Visited extends string[], T extends string> = Visited extends [
-	infer Head extends string,
-	...infer Rest extends string[],
-]
-	? Head extends T
-		? true
-		: Contains<Rest, T>
-	: false;
+export type AssociatedType = NodeType<RustGrammar, 'associated_type'>;
+export type AssociatedTypeConfig = BuilderConfig<RustGrammar, AssociatedType>;
 
-/** Branded-string leaf for a single kind. */
-type LeafBrand<K extends string> = RustTextBrand<K>;
+export type AsyncBlock = NodeType<RustGrammar, 'async_block'>;
+export type AsyncBlockConfig = BuilderConfig<RustGrammar, AsyncBlock>;
 
-/**
- * Expand a single child kind into a structured node or a branded-string leaf.
- * Uses the visited set for cycle detection.
- */
-type ExpandOneKind<K extends string, Visited extends string[]> = K extends RustNodeKind
-	? RustGrammar[K] extends { fields: object }
-		? Contains<Visited, K> extends true
-			? LeafBrand<K> // cycle detected → stop
-			: ExpandNode<K, Visited> // expand structurally
-		: LeafBrand<K> // no fields → leaf
-	: LeafBrand<K>; // not a grammar node → leaf
+export type Attribute = NodeType<RustGrammar, 'attribute'>;
+export type AttributeConfig = BuilderConfig<RustGrammar, Attribute>;
 
-/**
- * Expand a grammar slot into structured nodes, stopping at cycles.
- *
- * Distributes over every child kind individually (via conditional type
- * distribution on `K extends ...`) so that concrete nodes with `fields`
- * expand into structured objects while abstract supertypes without
- * `fields` become branded-string leaves.
- */
-type ExpandSlot<Info, Visited extends string[]> = Info extends { multiple: true }
-	? ExpandOneKind<SlotKinds<Info>, Visited>[]
-	: ExpandOneKind<SlotKinds<Info>, Visited>;
+export type AttributeItem = NodeType<RustGrammar, 'attribute_item'>;
+export type AttributeItemConfig = BuilderConfig<RustGrammar, AttributeItem>;
 
-// ---------------------------------------------------------------------------
-// Grammar field extraction
-// ---------------------------------------------------------------------------
+export type AwaitExpression = NodeType<RustGrammar, 'await_expression'>;
+export type AwaitExpressionConfig = BuilderConfig<RustGrammar, AwaitExpression>;
 
-type RustFieldMap<K extends RustNodeKind> = RustGrammar[K] extends { fields: infer Fields }
-	? Fields
-	: never;
+export type BaseFieldInitializer = NodeType<RustGrammar, 'base_field_initializer'>;
+export type BaseFieldInitializerConfig = BuilderConfig<RustGrammar, BaseFieldInitializer>;
 
-type RustFieldName<K extends RustNodeKind> = keyof RustFieldMap<K> & string;
+export type BinaryExpression = NodeType<RustGrammar, 'binary_expression'>;
+export type BinaryExpressionConfig = BuilderConfig<RustGrammar, BinaryExpression>;
 
-type RustFieldInfo<K extends RustNodeKind, F extends RustFieldName<K>> = Extract<
-	RustFieldMap<K>[F],
-	GrammarSlotInfo
->;
+export type Block = NodeType<RustGrammar, 'block'>;
+export type BlockConfig = BuilderConfig<RustGrammar, Block>;
 
-type RequiredRustFieldName<K extends RustNodeKind> = {
-	[F in RustFieldName<K>]: RustFieldInfo<K, F>['required'] extends true ? F : never;
-}[RustFieldName<K>];
+export type BlockComment = NodeType<RustGrammar, 'block_comment'>;
+export type BlockCommentConfig = BuilderConfig<RustGrammar, BlockComment>;
 
-type OptionalRustFieldName<K extends RustNodeKind> = Exclude<
-	RustFieldName<K>,
-	RequiredRustFieldName<K>
->;
+export type BoundedType = NodeType<RustGrammar, 'bounded_type'>;
+export type BoundedTypeConfig = BuilderConfig<RustGrammar, BoundedType>;
 
-type RustFieldKinds<K extends RustNodeKind, F extends RustFieldName<K>> = SlotKinds<
-	RustFieldInfo<K, F>
->;
+export type BracketedType = NodeType<RustGrammar, 'bracketed_type'>;
+export type BracketedTypeConfig = BuilderConfig<RustGrammar, BracketedType>;
 
-type RustChildrenInfo<K extends RustNodeKind> = RustGrammar[K] extends { children: infer Children }
-	? Extract<Children, GrammarSlotInfo>
-	: never;
+export type BreakExpression = NodeType<RustGrammar, 'break_expression'>;
+export type BreakExpressionConfig = BuilderConfig<RustGrammar, BreakExpression>;
 
-// ---------------------------------------------------------------------------
-// Ergonomic alias map — per-kind field rename overrides
-// Maps from grammar field names to ergonomic API names.
-// Adding an entry here renames the derived field in the IR type.
-// ---------------------------------------------------------------------------
+export type CallExpression = NodeType<RustGrammar, 'call_expression'>;
+export type CallExpressionConfig = BuilderConfig<RustGrammar, CallExpression>;
 
-type ValidAliasMap = {
-	[K in RustNodeKind]?: Partial<Record<RustFieldName<K>, string>>;
-};
+export type CapturedPattern = NodeType<RustGrammar, 'captured_pattern'>;
+export type CapturedPatternConfig = BuilderConfig<RustGrammar, CapturedPattern>;
 
-type FieldAliasMap = {
-	parameter: { pattern: 'name' };
-} & ValidAliasMap;
+export type ClosureExpression = NodeType<RustGrammar, 'closure_expression'>;
+export type ClosureExpressionConfig = BuilderConfig<RustGrammar, ClosureExpression>;
 
-/**
- * Resolve the output key for a given (kind, field_name) pair.
- * If FieldAliasMap has an entry, use the alias; otherwise CamelCase.
- */
-type ResolveFieldKey<K extends RustNodeKind, F extends string> = K extends keyof FieldAliasMap
-	? F extends keyof FieldAliasMap[K]
-		? FieldAliasMap[K][F] & string
-		: CamelCase<F>
-	: CamelCase<F>;
+export type ClosureParameters = NodeType<RustGrammar, 'closure_parameters'>;
+export type ClosureParametersConfig = BuilderConfig<RustGrammar, ClosureParameters>;
 
-// ---------------------------------------------------------------------------
-// Grammar-derived node shapes  (CamelCase keys + alias map)
-//
-// Cycle-aware: fields and children are recursively expanded via
-// ExpandSlot, stopping when a kind has already been visited.
-// ---------------------------------------------------------------------------
+export type CompoundAssignmentExpr = NodeType<RustGrammar, 'compound_assignment_expr'>;
+export type CompoundAssignmentExprConfig = BuilderConfig<RustGrammar, CompoundAssignmentExpr>;
 
-type DerivedNodeFields<K extends RustNodeKind, Visited extends string[]> = {
-	[F in RequiredRustFieldName<K> as ResolveFieldKey<K, F>]: ExpandSlot<
-		RustFieldInfo<K, F>,
-		Visited
-	>;
-} & {
-	[F in OptionalRustFieldName<K> as ResolveFieldKey<K, F>]?: ExpandSlot<
-		RustFieldInfo<K, F>,
-		Visited
-	>;
-};
+export type ConstBlock = NodeType<RustGrammar, 'const_block'>;
+export type ConstBlockConfig = BuilderConfig<RustGrammar, ConstBlock>;
 
-type DerivedNodeChildren<K extends RustNodeKind, Visited extends string[]> = [
-	RustChildrenInfo<K>,
-] extends [never]
-	? {}
-	: RustChildrenInfo<K>['required'] extends true
-		? { children: ExpandSlot<RustChildrenInfo<K>, Visited> }
-		: { children?: ExpandSlot<RustChildrenInfo<K>, Visited> };
+export type ConstItem = NodeType<RustGrammar, 'const_item'>;
+export type ConstItemConfig = BuilderConfig<RustGrammar, ConstItem>;
 
-type DerivedNodeShape<K extends RustNodeKind, Visited extends string[] = []> = DerivedNodeFields<
-	K,
-	[...Visited, K]
-> &
-	DerivedNodeChildren<K, [...Visited, K]>;
+export type ConstParameter = NodeType<RustGrammar, 'const_parameter'>;
+export type ConstParameterConfig = BuilderConfig<RustGrammar, ConstParameter>;
 
-/**
- * Recursively expanded grammar node.  Used by ExpandSlot to build
- * child structures — carries `kind` + all grammar-derived fields.
- */
-type ExpandNode<K extends RustNodeKind, Visited extends string[]> = Readonly<{ kind: K }> &
-	DerivedNodeShape<K, Visited>;
+export type ConstrainedTypeParameter = NodeType<RustGrammar, 'constrained_type_parameter'>;
+export type ConstrainedTypeParameterConfig = BuilderConfig<RustGrammar, ConstrainedTypeParameter>;
 
-// ---------------------------------------------------------------------------
-// Builder input helpers
-// ---------------------------------------------------------------------------
+export type ContinueExpression = NodeType<RustGrammar, 'continue_expression'>;
+export type ContinueExpressionConfig = BuilderConfig<RustGrammar, ContinueExpression>;
 
-/**
- * Recursively loosen an IR node type for builder input:
- * branded strings → plain string, nodes → node | string, arrays → loosened element arrays.
- * Preserves literal string unions and non-branded primitives.
- */
-type BuilderInputValue<T> = T extends { kind: RustNodeKind }
-	? T | string
-	: T extends readonly (infer U)[]
-		? BuilderInputValue<U>[]
-		: T extends RustTextBrand<string>
-			? string
-			: T extends string
-				? string extends T
-					? string
-					: T
-				: T extends object
-					? { [K in keyof T]: BuilderInputValue<T[K]> }
-					: T;
+export type DeclarationList = NodeType<RustGrammar, 'declaration_list'>;
+export type DeclarationListConfig = BuilderConfig<RustGrammar, DeclarationList>;
 
-export type RustNodeText<K extends RustNodeKind> = RustTextBrand<K>;
+export type DynamicType = NodeType<RustGrammar, 'dynamic_type'>;
+export type DynamicTypeConfig = BuilderConfig<RustGrammar, DynamicType>;
 
-export type RustFieldText<K extends RustNodeKind, F extends RustFieldName<K>> = RustTextBrand<
-	RustFieldKinds<K, F>
->;
+export type ElseClause = NodeType<RustGrammar, 'else_clause'>;
+export type ElseClauseConfig = BuilderConfig<RustGrammar, ElseClause>;
 
-/** Strip `kind` and apply BuilderInputValue loosening to produce a builder's raw input shape. */
-export type NodeBuilderInput<T extends { kind: RustNodeKind }> = Simplify<
-	{
-		[K in Exclude<Extract<RequiredKeysOf<T>, keyof T>, 'kind'>]: BuilderInputValue<T[K]>;
-	} & {
-		[K in Exclude<Extract<OptionalKeysOf<T>, keyof T>, 'kind'>]?: BuilderInputValue<T[K]>;
-	}
->;
+export type EnumItem = NodeType<RustGrammar, 'enum_item'>;
+export type EnumItemConfig = BuilderConfig<RustGrammar, EnumItem>;
 
-/**
- * Grammar-derived field names that become optional in `BuilderConfig<T>`.
- * Callers may omit these fields; they're passed through as-is
- * (no synthetic defaults are applied by the builders).
- */
-export type DefaultableBuilderFieldName =
-	| 'body'
-	| 'typeParameters'
-	| 'children'
-	| 'returnType'
-	| 'parameters'
-	| 'trait'
-	| 'alternative';
+export type EnumVariant = NodeType<RustGrammar, 'enum_variant'>;
+export type EnumVariantConfig = BuilderConfig<RustGrammar, EnumVariant>;
 
-/** Extract keys from a builder input that match DefaultableBuilderFieldName. */
-type DefaultableKeys<T extends { kind: RustNodeKind }> = Extract<
-	keyof NodeBuilderInput<T>,
-	DefaultableBuilderFieldName
->;
+export type EnumVariantList = NodeType<RustGrammar, 'enum_variant_list'>;
+export type EnumVariantListConfig = BuilderConfig<RustGrammar, EnumVariantList>;
 
-export type BuilderConfig<
-	T extends { kind: RustNodeKind },
-	OptionalKeys extends keyof NodeBuilderInput<T> = DefaultableKeys<T>,
-> = Simplify<
-	SetOptional<
-		NodeBuilderInput<T>,
-		Extract<
-			OptionalKeys | Extract<OptionalKeysOf<NodeBuilderInput<T>>, keyof NodeBuilderInput<T>>,
-			keyof NodeBuilderInput<T>
-		>
-	>
->;
+export type ExpressionStatement = NodeType<RustGrammar, 'expression_statement'>;
+export type ExpressionStatementConfig = BuilderConfig<RustGrammar, ExpressionStatement>;
 
-// ---------------------------------------------------------------------------
-// Shared primitives
-// ---------------------------------------------------------------------------
+export type ExternCrateDeclaration = NodeType<RustGrammar, 'extern_crate_declaration'>;
+export type ExternCrateDeclarationConfig = BuilderConfig<RustGrammar, ExternCrateDeclaration>;
 
-export type NodeType<K extends RustNodeKind, Visited extends string[] = []> = SimplifyDeep<
-	Readonly<{ kind: K }> & DerivedNodeShape<K, Visited>
->;
+export type ExternModifier = NodeType<RustGrammar, 'extern_modifier'>;
+export type ExternModifierConfig = BuilderConfig<RustGrammar, ExternModifier>;
 
-// ---------------------------------------------------------------------------
-// Helper aliases — grammar-direct, zero hand-rolled fields
-// ---------------------------------------------------------------------------
+export type FieldDeclaration = NodeType<RustGrammar, 'field_declaration'>;
+export type FieldDeclarationConfig = BuilderConfig<RustGrammar, FieldDeclaration>;
 
-/** A single named field in a Rust struct (`field_declaration`). */
-export type FieldDeclaration = NodeType<'field_declaration'>;
+export type FieldDeclarationList = NodeType<RustGrammar, 'field_declaration_list'>;
+export type FieldDeclarationListConfig = BuilderConfig<RustGrammar, FieldDeclarationList>;
 
-/** A single function parameter (`parameter`). */
-export type ParameterDeclaration = NodeType<'parameter'>;
+export type FieldExpression = NodeType<RustGrammar, 'field_expression'>;
+export type FieldExpressionConfig = BuilderConfig<RustGrammar, FieldExpression>;
 
-// ---------------------------------------------------------------------------
-// IR Node types  (discriminated union — `kind` is the discriminant)
-// All shapes are 100% grammar-derived via NodeType<K>.
-// ---------------------------------------------------------------------------
+export type FieldInitializer = NodeType<RustGrammar, 'field_initializer'>;
+export type FieldInitializerConfig = BuilderConfig<RustGrammar, FieldInitializer>;
 
-/** Rust `struct` declaration. tree-sitter node: `struct_item` */
-export type StructItem = NodeType<'struct_item'>;
+export type FieldInitializerList = NodeType<RustGrammar, 'field_initializer_list'>;
+export type FieldInitializerListConfig = BuilderConfig<RustGrammar, FieldInitializerList>;
 
-/** Rust free function or method. tree-sitter node: `function_item` */
-export type FunctionItem = NodeType<'function_item'>;
+export type FieldPattern = NodeType<RustGrammar, 'field_pattern'>;
+export type FieldPatternConfig = BuilderConfig<RustGrammar, FieldPattern>;
 
-/** Rust `use` declaration. tree-sitter node: `use_declaration` */
-export type UseDeclaration = NodeType<'use_declaration'>;
+export type ForExpression = NodeType<RustGrammar, 'for_expression'>;
+export type ForExpressionConfig = BuilderConfig<RustGrammar, ForExpression>;
 
-/** Rust `impl` block. tree-sitter node: `impl_item` */
-export type ImplItem = NodeType<'impl_item'>;
+export type ForLifetimes = NodeType<RustGrammar, 'for_lifetimes'>;
+export type ForLifetimesConfig = BuilderConfig<RustGrammar, ForLifetimes>;
 
-/** Rust `if` / `else if` / `else` expression. tree-sitter node: `if_expression` */
-export type IfExpression = NodeType<'if_expression'>;
+export type ForeignModItem = NodeType<RustGrammar, 'foreign_mod_item'>;
+export type ForeignModItemConfig = BuilderConfig<RustGrammar, ForeignModItem>;
 
-/** Rust macro invocation. tree-sitter node: `macro_invocation` */
-export type MacroInvocation = NodeType<'macro_invocation'>;
+export type FunctionItem = NodeType<RustGrammar, 'function_item'>;
+export type FunctionItemConfig = BuilderConfig<RustGrammar, FunctionItem>;
 
-/** A complete Rust source file. tree-sitter node: `source_file` */
-export type SourceFile = NodeType<'source_file'>;
+export type FunctionModifiers = NodeType<RustGrammar, 'function_modifiers'>;
+export type FunctionModifiersConfig = BuilderConfig<RustGrammar, FunctionModifiers>;
 
-/** Discriminated union of all supported IR node kinds. */
+export type FunctionSignatureItem = NodeType<RustGrammar, 'function_signature_item'>;
+export type FunctionSignatureItemConfig = BuilderConfig<RustGrammar, FunctionSignatureItem>;
+
+export type FunctionType = NodeType<RustGrammar, 'function_type'>;
+export type FunctionTypeConfig = BuilderConfig<RustGrammar, FunctionType>;
+
+export type GenericFunction = NodeType<RustGrammar, 'generic_function'>;
+export type GenericFunctionConfig = BuilderConfig<RustGrammar, GenericFunction>;
+
+export type GenericType = NodeType<RustGrammar, 'generic_type'>;
+export type GenericTypeConfig = BuilderConfig<RustGrammar, GenericType>;
+
+export type GenericTypeWithTurbofish = NodeType<RustGrammar, 'generic_type_with_turbofish'>;
+export type GenericTypeWithTurbofishConfig = BuilderConfig<RustGrammar, GenericTypeWithTurbofish>;
+
+export type HigherRankedTraitBound = NodeType<RustGrammar, 'higher_ranked_trait_bound'>;
+export type HigherRankedTraitBoundConfig = BuilderConfig<RustGrammar, HigherRankedTraitBound>;
+
+export type IfExpression = NodeType<RustGrammar, 'if_expression'>;
+export type IfExpressionConfig = BuilderConfig<RustGrammar, IfExpression>;
+
+export type ImplItem = NodeType<RustGrammar, 'impl_item'>;
+export type ImplItemConfig = BuilderConfig<RustGrammar, ImplItem>;
+
+export type IndexExpression = NodeType<RustGrammar, 'index_expression'>;
+export type IndexExpressionConfig = BuilderConfig<RustGrammar, IndexExpression>;
+
+export type InnerAttributeItem = NodeType<RustGrammar, 'inner_attribute_item'>;
+export type InnerAttributeItemConfig = BuilderConfig<RustGrammar, InnerAttributeItem>;
+
+export type Label = NodeType<RustGrammar, 'label'>;
+export type LabelConfig = BuilderConfig<RustGrammar, Label>;
+
+export type LetChain = NodeType<RustGrammar, 'let_chain'>;
+export type LetChainConfig = BuilderConfig<RustGrammar, LetChain>;
+
+export type LetCondition = NodeType<RustGrammar, 'let_condition'>;
+export type LetConditionConfig = BuilderConfig<RustGrammar, LetCondition>;
+
+export type LetDeclaration = NodeType<RustGrammar, 'let_declaration'>;
+export type LetDeclarationConfig = BuilderConfig<RustGrammar, LetDeclaration>;
+
+export type Lifetime = NodeType<RustGrammar, 'lifetime'>;
+export type LifetimeConfig = BuilderConfig<RustGrammar, Lifetime>;
+
+export type LineComment = NodeType<RustGrammar, 'line_comment'>;
+export type LineCommentConfig = BuilderConfig<RustGrammar, LineComment>;
+
+export type LoopExpression = NodeType<RustGrammar, 'loop_expression'>;
+export type LoopExpressionConfig = BuilderConfig<RustGrammar, LoopExpression>;
+
+export type MacroDefinition = NodeType<RustGrammar, 'macro_definition'>;
+export type MacroDefinitionConfig = BuilderConfig<RustGrammar, MacroDefinition>;
+
+export type MacroInvocation = NodeType<RustGrammar, 'macro_invocation'>;
+export type MacroInvocationConfig = BuilderConfig<RustGrammar, MacroInvocation>;
+
+export type MacroRule = NodeType<RustGrammar, 'macro_rule'>;
+export type MacroRuleConfig = BuilderConfig<RustGrammar, MacroRule>;
+
+export type MatchArm = NodeType<RustGrammar, 'match_arm'>;
+export type MatchArmConfig = BuilderConfig<RustGrammar, MatchArm>;
+
+export type MatchBlock = NodeType<RustGrammar, 'match_block'>;
+export type MatchBlockConfig = BuilderConfig<RustGrammar, MatchBlock>;
+
+export type MatchExpression = NodeType<RustGrammar, 'match_expression'>;
+export type MatchExpressionConfig = BuilderConfig<RustGrammar, MatchExpression>;
+
+export type MatchPattern = NodeType<RustGrammar, 'match_pattern'>;
+export type MatchPatternConfig = BuilderConfig<RustGrammar, MatchPattern>;
+
+export type ModItem = NodeType<RustGrammar, 'mod_item'>;
+export type ModItemConfig = BuilderConfig<RustGrammar, ModItem>;
+
+export type MutPattern = NodeType<RustGrammar, 'mut_pattern'>;
+export type MutPatternConfig = BuilderConfig<RustGrammar, MutPattern>;
+
+export type NegativeLiteral = NodeType<RustGrammar, 'negative_literal'>;
+export type NegativeLiteralConfig = BuilderConfig<RustGrammar, NegativeLiteral>;
+
+export type OptionalTypeParameter = NodeType<RustGrammar, 'optional_type_parameter'>;
+export type OptionalTypeParameterConfig = BuilderConfig<RustGrammar, OptionalTypeParameter>;
+
+export type OrPattern = NodeType<RustGrammar, 'or_pattern'>;
+export type OrPatternConfig = BuilderConfig<RustGrammar, OrPattern>;
+
+export type OrderedFieldDeclarationList = NodeType<RustGrammar, 'ordered_field_declaration_list'>;
+export type OrderedFieldDeclarationListConfig = BuilderConfig<RustGrammar, OrderedFieldDeclarationList>;
+
+export type Parameter = NodeType<RustGrammar, 'parameter'>;
+export type ParameterConfig = BuilderConfig<RustGrammar, Parameter>;
+
+export type Parameters = NodeType<RustGrammar, 'parameters'>;
+export type ParametersConfig = BuilderConfig<RustGrammar, Parameters>;
+
+export type ParenthesizedExpression = NodeType<RustGrammar, 'parenthesized_expression'>;
+export type ParenthesizedExpressionConfig = BuilderConfig<RustGrammar, ParenthesizedExpression>;
+
+export type PointerType = NodeType<RustGrammar, 'pointer_type'>;
+export type PointerTypeConfig = BuilderConfig<RustGrammar, PointerType>;
+
+export type QualifiedType = NodeType<RustGrammar, 'qualified_type'>;
+export type QualifiedTypeConfig = BuilderConfig<RustGrammar, QualifiedType>;
+
+export type RangeExpression = NodeType<RustGrammar, 'range_expression'>;
+export type RangeExpressionConfig = BuilderConfig<RustGrammar, RangeExpression>;
+
+export type RangePattern = NodeType<RustGrammar, 'range_pattern'>;
+export type RangePatternConfig = BuilderConfig<RustGrammar, RangePattern>;
+
+export type RawStringLiteral = NodeType<RustGrammar, 'raw_string_literal'>;
+export type RawStringLiteralConfig = BuilderConfig<RustGrammar, RawStringLiteral>;
+
+export type RefPattern = NodeType<RustGrammar, 'ref_pattern'>;
+export type RefPatternConfig = BuilderConfig<RustGrammar, RefPattern>;
+
+export type ReferenceExpression = NodeType<RustGrammar, 'reference_expression'>;
+export type ReferenceExpressionConfig = BuilderConfig<RustGrammar, ReferenceExpression>;
+
+export type ReferencePattern = NodeType<RustGrammar, 'reference_pattern'>;
+export type ReferencePatternConfig = BuilderConfig<RustGrammar, ReferencePattern>;
+
+export type ReferenceType = NodeType<RustGrammar, 'reference_type'>;
+export type ReferenceTypeConfig = BuilderConfig<RustGrammar, ReferenceType>;
+
+export type RemovedTraitBound = NodeType<RustGrammar, 'removed_trait_bound'>;
+export type RemovedTraitBoundConfig = BuilderConfig<RustGrammar, RemovedTraitBound>;
+
+export type ReturnExpression = NodeType<RustGrammar, 'return_expression'>;
+export type ReturnExpressionConfig = BuilderConfig<RustGrammar, ReturnExpression>;
+
+export type ScopedIdentifier = NodeType<RustGrammar, 'scoped_identifier'>;
+export type ScopedIdentifierConfig = BuilderConfig<RustGrammar, ScopedIdentifier>;
+
+export type ScopedTypeIdentifier = NodeType<RustGrammar, 'scoped_type_identifier'>;
+export type ScopedTypeIdentifierConfig = BuilderConfig<RustGrammar, ScopedTypeIdentifier>;
+
+export type ScopedUseList = NodeType<RustGrammar, 'scoped_use_list'>;
+export type ScopedUseListConfig = BuilderConfig<RustGrammar, ScopedUseList>;
+
+export type SelfParameter = NodeType<RustGrammar, 'self_parameter'>;
+export type SelfParameterConfig = BuilderConfig<RustGrammar, SelfParameter>;
+
+export type ShorthandFieldInitializer = NodeType<RustGrammar, 'shorthand_field_initializer'>;
+export type ShorthandFieldInitializerConfig = BuilderConfig<RustGrammar, ShorthandFieldInitializer>;
+
+export type SlicePattern = NodeType<RustGrammar, 'slice_pattern'>;
+export type SlicePatternConfig = BuilderConfig<RustGrammar, SlicePattern>;
+
+export type SourceFile = NodeType<RustGrammar, 'source_file'>;
+export type SourceFileConfig = BuilderConfig<RustGrammar, SourceFile>;
+
+export type StaticItem = NodeType<RustGrammar, 'static_item'>;
+export type StaticItemConfig = BuilderConfig<RustGrammar, StaticItem>;
+
+export type StringLiteral = NodeType<RustGrammar, 'string_literal'>;
+export type StringLiteralConfig = BuilderConfig<RustGrammar, StringLiteral>;
+
+export type StructExpression = NodeType<RustGrammar, 'struct_expression'>;
+export type StructExpressionConfig = BuilderConfig<RustGrammar, StructExpression>;
+
+export type StructItem = NodeType<RustGrammar, 'struct_item'>;
+export type StructItemConfig = BuilderConfig<RustGrammar, StructItem>;
+
+export type StructPattern = NodeType<RustGrammar, 'struct_pattern'>;
+export type StructPatternConfig = BuilderConfig<RustGrammar, StructPattern>;
+
+export type TokenBindingPattern = NodeType<RustGrammar, 'token_binding_pattern'>;
+export type TokenBindingPatternConfig = BuilderConfig<RustGrammar, TokenBindingPattern>;
+
+export type TokenRepetition = NodeType<RustGrammar, 'token_repetition'>;
+export type TokenRepetitionConfig = BuilderConfig<RustGrammar, TokenRepetition>;
+
+export type TokenRepetitionPattern = NodeType<RustGrammar, 'token_repetition_pattern'>;
+export type TokenRepetitionPatternConfig = BuilderConfig<RustGrammar, TokenRepetitionPattern>;
+
+export type TokenTree = NodeType<RustGrammar, 'token_tree'>;
+export type TokenTreeConfig = BuilderConfig<RustGrammar, TokenTree>;
+
+export type TokenTreePattern = NodeType<RustGrammar, 'token_tree_pattern'>;
+export type TokenTreePatternConfig = BuilderConfig<RustGrammar, TokenTreePattern>;
+
+export type TraitBounds = NodeType<RustGrammar, 'trait_bounds'>;
+export type TraitBoundsConfig = BuilderConfig<RustGrammar, TraitBounds>;
+
+export type TraitItem = NodeType<RustGrammar, 'trait_item'>;
+export type TraitItemConfig = BuilderConfig<RustGrammar, TraitItem>;
+
+export type TryBlock = NodeType<RustGrammar, 'try_block'>;
+export type TryBlockConfig = BuilderConfig<RustGrammar, TryBlock>;
+
+export type TryExpression = NodeType<RustGrammar, 'try_expression'>;
+export type TryExpressionConfig = BuilderConfig<RustGrammar, TryExpression>;
+
+export type TupleExpression = NodeType<RustGrammar, 'tuple_expression'>;
+export type TupleExpressionConfig = BuilderConfig<RustGrammar, TupleExpression>;
+
+export type TuplePattern = NodeType<RustGrammar, 'tuple_pattern'>;
+export type TuplePatternConfig = BuilderConfig<RustGrammar, TuplePattern>;
+
+export type TupleStructPattern = NodeType<RustGrammar, 'tuple_struct_pattern'>;
+export type TupleStructPatternConfig = BuilderConfig<RustGrammar, TupleStructPattern>;
+
+export type TupleType = NodeType<RustGrammar, 'tuple_type'>;
+export type TupleTypeConfig = BuilderConfig<RustGrammar, TupleType>;
+
+export type TypeArguments = NodeType<RustGrammar, 'type_arguments'>;
+export type TypeArgumentsConfig = BuilderConfig<RustGrammar, TypeArguments>;
+
+export type TypeBinding = NodeType<RustGrammar, 'type_binding'>;
+export type TypeBindingConfig = BuilderConfig<RustGrammar, TypeBinding>;
+
+export type TypeCastExpression = NodeType<RustGrammar, 'type_cast_expression'>;
+export type TypeCastExpressionConfig = BuilderConfig<RustGrammar, TypeCastExpression>;
+
+export type TypeItem = NodeType<RustGrammar, 'type_item'>;
+export type TypeItemConfig = BuilderConfig<RustGrammar, TypeItem>;
+
+export type TypeParameters = NodeType<RustGrammar, 'type_parameters'>;
+export type TypeParametersConfig = BuilderConfig<RustGrammar, TypeParameters>;
+
+export type UnaryExpression = NodeType<RustGrammar, 'unary_expression'>;
+export type UnaryExpressionConfig = BuilderConfig<RustGrammar, UnaryExpression>;
+
+export type UnionItem = NodeType<RustGrammar, 'union_item'>;
+export type UnionItemConfig = BuilderConfig<RustGrammar, UnionItem>;
+
+export type UnsafeBlock = NodeType<RustGrammar, 'unsafe_block'>;
+export type UnsafeBlockConfig = BuilderConfig<RustGrammar, UnsafeBlock>;
+
+export type UseAsClause = NodeType<RustGrammar, 'use_as_clause'>;
+export type UseAsClauseConfig = BuilderConfig<RustGrammar, UseAsClause>;
+
+export type UseDeclaration = NodeType<RustGrammar, 'use_declaration'>;
+export type UseDeclarationConfig = BuilderConfig<RustGrammar, UseDeclaration>;
+
+export type UseList = NodeType<RustGrammar, 'use_list'>;
+export type UseListConfig = BuilderConfig<RustGrammar, UseList>;
+
+export type UseWildcard = NodeType<RustGrammar, 'use_wildcard'>;
+export type UseWildcardConfig = BuilderConfig<RustGrammar, UseWildcard>;
+
+export type VariadicParameter = NodeType<RustGrammar, 'variadic_parameter'>;
+export type VariadicParameterConfig = BuilderConfig<RustGrammar, VariadicParameter>;
+
+export type VisibilityModifier = NodeType<RustGrammar, 'visibility_modifier'>;
+export type VisibilityModifierConfig = BuilderConfig<RustGrammar, VisibilityModifier>;
+
+export type WhereClause = NodeType<RustGrammar, 'where_clause'>;
+export type WhereClauseConfig = BuilderConfig<RustGrammar, WhereClause>;
+
+export type WherePredicate = NodeType<RustGrammar, 'where_predicate'>;
+export type WherePredicateConfig = BuilderConfig<RustGrammar, WherePredicate>;
+
+export type WhileExpression = NodeType<RustGrammar, 'while_expression'>;
+export type WhileExpressionConfig = BuilderConfig<RustGrammar, WhileExpression>;
+
+export type YieldExpression = NodeType<RustGrammar, 'yield_expression'>;
+export type YieldExpressionConfig = BuilderConfig<RustGrammar, YieldExpression>;
+
 export type RustIrNode =
-	| StructItem
-	| FunctionItem
-	| UseDeclaration
-	| ImplItem
-	| IfExpression
-	| MacroInvocation
-	| SourceFile;
+  | AbstractType
+  | Arguments
+  | ArrayExpression
+  | ArrayType
+  | AssignmentExpression
+  | AssociatedType
+  | AsyncBlock
+  | Attribute
+  | AttributeItem
+  | AwaitExpression
+  | BaseFieldInitializer
+  | BinaryExpression
+  | Block
+  | BlockComment
+  | BoundedType
+  | BracketedType
+  | BreakExpression
+  | CallExpression
+  | CapturedPattern
+  | ClosureExpression
+  | ClosureParameters
+  | CompoundAssignmentExpr
+  | ConstBlock
+  | ConstItem
+  | ConstParameter
+  | ConstrainedTypeParameter
+  | ContinueExpression
+  | DeclarationList
+  | DynamicType
+  | ElseClause
+  | EnumItem
+  | EnumVariant
+  | EnumVariantList
+  | ExpressionStatement
+  | ExternCrateDeclaration
+  | ExternModifier
+  | FieldDeclaration
+  | FieldDeclarationList
+  | FieldExpression
+  | FieldInitializer
+  | FieldInitializerList
+  | FieldPattern
+  | ForExpression
+  | ForLifetimes
+  | ForeignModItem
+  | FunctionItem
+  | FunctionModifiers
+  | FunctionSignatureItem
+  | FunctionType
+  | GenericFunction
+  | GenericType
+  | GenericTypeWithTurbofish
+  | HigherRankedTraitBound
+  | IfExpression
+  | ImplItem
+  | IndexExpression
+  | InnerAttributeItem
+  | Label
+  | LetChain
+  | LetCondition
+  | LetDeclaration
+  | Lifetime
+  | LineComment
+  | LoopExpression
+  | MacroDefinition
+  | MacroInvocation
+  | MacroRule
+  | MatchArm
+  | MatchBlock
+  | MatchExpression
+  | MatchPattern
+  | ModItem
+  | MutPattern
+  | NegativeLiteral
+  | OptionalTypeParameter
+  | OrPattern
+  | OrderedFieldDeclarationList
+  | Parameter
+  | Parameters
+  | ParenthesizedExpression
+  | PointerType
+  | QualifiedType
+  | RangeExpression
+  | RangePattern
+  | RawStringLiteral
+  | RefPattern
+  | ReferenceExpression
+  | ReferencePattern
+  | ReferenceType
+  | RemovedTraitBound
+  | ReturnExpression
+  | ScopedIdentifier
+  | ScopedTypeIdentifier
+  | ScopedUseList
+  | SelfParameter
+  | ShorthandFieldInitializer
+  | SlicePattern
+  | SourceFile
+  | StaticItem
+  | StringLiteral
+  | StructExpression
+  | StructItem
+  | StructPattern
+  | TokenBindingPattern
+  | TokenRepetition
+  | TokenRepetitionPattern
+  | TokenTree
+  | TokenTreePattern
+  | TraitBounds
+  | TraitItem
+  | TryBlock
+  | TryExpression
+  | TupleExpression
+  | TuplePattern
+  | TupleStructPattern
+  | TupleType
+  | TypeArguments
+  | TypeBinding
+  | TypeCastExpression
+  | TypeItem
+  | TypeParameters
+  | UnaryExpression
+  | UnionItem
+  | UnsafeBlock
+  | UseAsClause
+  | UseDeclaration
+  | UseList
+  | UseWildcard
+  | VariadicParameter
+  | VisibilityModifier
+  | WhereClause
+  | WherePredicate
+  | WhileExpression
+  | YieldExpression
+;
 
-export type StructItemConfig = BuilderConfig<StructItem>;
-export type FunctionItemConfig = BuilderConfig<
-	FunctionItem,
-	Exclude<DefaultableKeys<FunctionItem>, 'body'>
->;
-export type UseDeclarationConfig = BuilderConfig<UseDeclaration>;
-export type ImplItemConfig = BuilderConfig<ImplItem>;
-export type IfExpressionConfig = BuilderConfig<IfExpression>;
-export type MacroInvocationConfig = BuilderConfig<
-	MacroInvocation,
-	Exclude<DefaultableKeys<MacroInvocation>, 'children'>
->;
-export type SourceFileConfig = BuilderConfig<SourceFile>;
-
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
-
-export type ValidationResult =
-	| { ok: true }
-	| { ok: false; errors: Array<{ offset: number; kind: 'ERROR' }> };
+export type { ValidationResult };
