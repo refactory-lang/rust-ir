@@ -12,7 +12,7 @@ export function enumVariant(config: EnumVariantConfig): EnumVariant {
 
 class EnumVariantBuilder implements BuilderTerminal<EnumVariant> {
   private _body?: string;
-  private _name: string;
+  private _name: string = '';
   private _value?: string;
   private _children?: string;
 

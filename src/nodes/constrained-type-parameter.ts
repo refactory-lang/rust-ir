@@ -11,8 +11,8 @@ export function constrainedTypeParameter(config: ConstrainedTypeParameterConfig)
 }
 
 class ConstrainedTypeParameterBuilder implements BuilderTerminal<ConstrainedTypeParameter> {
-  private _bounds: string;
-  private _left: string;
+  private _bounds: string = '';
+  private _left: string = '';
 
   constructor(bounds: string) {
     this._bounds = bounds;

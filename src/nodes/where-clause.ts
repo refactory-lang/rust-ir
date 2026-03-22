@@ -13,7 +13,7 @@ export function whereClause(config: WhereClauseConfig): WhereClause {
 class WhereClauseBuilder implements BuilderTerminal<WhereClause> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class WhereClauseBuilder implements BuilderTerminal<WhereClause> {
   }
 }
 
-export function where_clause(children: string): WhereClauseBuilder {
+export function where_clause(children: string[]): WhereClauseBuilder {
   return new WhereClauseBuilder(children);
 }

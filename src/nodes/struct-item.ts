@@ -12,7 +12,7 @@ export function structItem(config: StructItemConfig): StructItem {
 
 class StructBuilder implements BuilderTerminal<StructItem> {
   private _body?: string;
-  private _name: string;
+  private _name: string = '';
   private _typeParameters?: string;
   private _children: string[] = [];
 

@@ -11,8 +11,8 @@ export function typeItem(config: TypeItemConfig): TypeItem {
 }
 
 class TypeBuilder implements BuilderTerminal<TypeItem> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
   private _typeParameters?: string;
   private _children: string[] = [];
 

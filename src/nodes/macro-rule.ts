@@ -11,8 +11,8 @@ export function macroRule(config: MacroRuleConfig): MacroRule {
 }
 
 class MacroRuleBuilder implements BuilderTerminal<MacroRule> {
-  private _left: string;
-  private _right: string;
+  private _left: string = '';
+  private _right: string = '';
 
   constructor(left: string) {
     this._left = left;

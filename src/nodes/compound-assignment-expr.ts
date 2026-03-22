@@ -11,9 +11,9 @@ export function compoundAssignmentExpr(config: CompoundAssignmentExprConfig): Co
 }
 
 class CompoundAssignmentExprBuilder implements BuilderTerminal<CompoundAssignmentExpr> {
-  private _left: string;
-  private _operator: string;
-  private _right: string;
+  private _left: string = '';
+  private _operator: string = '';
+  private _right: string = '';
 
   constructor(left: string) {
     this._left = left;

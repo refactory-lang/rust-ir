@@ -11,7 +11,7 @@ export function macroDefinition(config: MacroDefinitionConfig): MacroDefinition 
 }
 
 class MacroDefinitionBuilder implements BuilderTerminal<MacroDefinition> {
-  private _name: string;
+  private _name: string = '';
   private _children: string[] = [];
 
   constructor(name: string) {

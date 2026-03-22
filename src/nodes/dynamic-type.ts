@@ -11,7 +11,7 @@ export function dynamicType(config: DynamicTypeConfig): DynamicType {
 }
 
 class DynamicTypeBuilder implements BuilderTerminal<DynamicType> {
-  private _trait: string;
+  private _trait: string = '';
 
   constructor(trait: string) {
     this._trait = trait;

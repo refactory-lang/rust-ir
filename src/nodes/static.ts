@@ -11,8 +11,8 @@ export function staticItem(config: StaticItemConfig): StaticItem {
 }
 
 class StaticBuilder implements BuilderTerminal<StaticItem> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
   private _value?: string;
   private _children: string[] = [];
 

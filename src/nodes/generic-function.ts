@@ -11,8 +11,8 @@ export function genericFunction(config: GenericFunctionConfig): GenericFunction 
 }
 
 class GenericFunctionBuilder implements BuilderTerminal<GenericFunction> {
-  private _function: string;
-  private _typeArguments: string;
+  private _function: string = '';
+  private _typeArguments: string = '';
 
   constructor(function_: string) {
     this._function = function_;

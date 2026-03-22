@@ -11,8 +11,8 @@ export function matchExpression(config: MatchExpressionConfig): MatchExpression 
 }
 
 class MatchBuilder implements BuilderTerminal<MatchExpression> {
-  private _body: string;
-  private _value: string;
+  private _body: string = '';
+  private _value: string = '';
 
   constructor(body: string) {
     this._body = body;

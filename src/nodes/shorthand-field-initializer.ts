@@ -13,7 +13,7 @@ export function shorthandFieldInitializer(config: ShorthandFieldInitializerConfi
 class ShorthandFieldInitializerBuilder implements BuilderTerminal<ShorthandFieldInitializer> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class ShorthandFieldInitializerBuilder implements BuilderTerminal<ShorthandField
   }
 }
 
-export function shorthand_field_initializer(children: string): ShorthandFieldInitializerBuilder {
+export function shorthand_field_initializer(children: string[]): ShorthandFieldInitializerBuilder {
   return new ShorthandFieldInitializerBuilder(children);
 }

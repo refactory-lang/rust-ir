@@ -12,7 +12,7 @@ export function associatedType(config: AssociatedTypeConfig): AssociatedType {
 
 class AssociatedTypeBuilder implements BuilderTerminal<AssociatedType> {
   private _bounds?: string;
-  private _name: string;
+  private _name: string = '';
   private _typeParameters?: string;
   private _children?: string;
 

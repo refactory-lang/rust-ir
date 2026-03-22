@@ -11,8 +11,8 @@ export function assignmentExpression(config: AssignmentExpressionConfig): Assign
 }
 
 class AssignmentBuilder implements BuilderTerminal<AssignmentExpression> {
-  private _left: string;
-  private _right: string;
+  private _left: string = '';
+  private _right: string = '';
 
   constructor(left: string) {
     this._left = left;

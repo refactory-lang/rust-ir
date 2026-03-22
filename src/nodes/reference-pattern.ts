@@ -13,7 +13,7 @@ export function referencePattern(config: ReferencePatternConfig): ReferencePatte
 class ReferencePatternBuilder implements BuilderTerminal<ReferencePattern> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class ReferencePatternBuilder implements BuilderTerminal<ReferencePattern> {
   }
 }
 
-export function reference_pattern(children: string): ReferencePatternBuilder {
+export function reference_pattern(children: string[]): ReferencePatternBuilder {
   return new ReferencePatternBuilder(children);
 }

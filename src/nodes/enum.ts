@@ -11,8 +11,8 @@ export function enumItem(config: EnumItemConfig): EnumItem {
 }
 
 class EnumBuilder implements BuilderTerminal<EnumItem> {
-  private _body: string;
-  private _name: string;
+  private _body: string = '';
+  private _name: string = '';
   private _typeParameters?: string;
   private _children: string[] = [];
 

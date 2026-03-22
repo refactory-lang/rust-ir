@@ -11,8 +11,8 @@ export function whileExpression(config: WhileExpressionConfig): WhileExpression 
 }
 
 class WhileBuilder implements BuilderTerminal<WhileExpression> {
-  private _body: string;
-  private _condition: string;
+  private _body: string = '';
+  private _condition: string = '';
   private _children?: string;
 
   constructor(body: string) {

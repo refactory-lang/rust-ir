@@ -13,7 +13,7 @@ export function boundedType(config: BoundedTypeConfig): BoundedType {
 class BoundedTypeBuilder implements BuilderTerminal<BoundedType> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class BoundedTypeBuilder implements BuilderTerminal<BoundedType> {
   }
 }
 
-export function bounded_type(children: string): BoundedTypeBuilder {
+export function bounded_type(children: string[]): BoundedTypeBuilder {
   return new BoundedTypeBuilder(children);
 }

@@ -11,8 +11,8 @@ export function genericTypeWithTurbofish(config: GenericTypeWithTurbofishConfig)
 }
 
 class GenericTypeWithTurbofishBuilder implements BuilderTerminal<GenericTypeWithTurbofish> {
-  private _type: string;
-  private _typeArguments: string;
+  private _type: string = '';
+  private _typeArguments: string = '';
 
   constructor(type_: string) {
     this._type = type_;

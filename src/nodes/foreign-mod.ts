@@ -14,7 +14,7 @@ class ForeignModBuilder implements BuilderTerminal<ForeignModItem> {
   private _body?: string;
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -39,6 +39,6 @@ class ForeignModBuilder implements BuilderTerminal<ForeignModItem> {
   }
 }
 
-export function foreign_mod(children: string): ForeignModBuilder {
+export function foreign_mod(children: string[]): ForeignModBuilder {
   return new ForeignModBuilder(children);
 }

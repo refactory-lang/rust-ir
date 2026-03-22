@@ -11,8 +11,8 @@ export function constParameter(config: ConstParameterConfig): ConstParameter {
 }
 
 class ConstParameterBuilder implements BuilderTerminal<ConstParameter> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
 
   constructor(name: string) {
     this._name = name;

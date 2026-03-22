@@ -11,7 +11,7 @@ export function referenceExpression(config: ReferenceExpressionConfig): Referenc
 }
 
 class ReferenceBuilder implements BuilderTerminal<ReferenceExpression> {
-  private _value: string;
+  private _value: string = '';
   private _children?: string;
 
   constructor(value: string) {

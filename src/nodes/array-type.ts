@@ -11,7 +11,7 @@ export function arrayType(config: ArrayTypeConfig): ArrayType {
 }
 
 class ArrayTypeBuilder implements BuilderTerminal<ArrayType> {
-  private _element: string;
+  private _element: string = '';
   private _length?: string;
 
   constructor(element: string) {

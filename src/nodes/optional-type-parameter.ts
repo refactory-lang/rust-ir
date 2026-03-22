@@ -11,8 +11,8 @@ export function optionalTypeParameter(config: OptionalTypeParameterConfig): Opti
 }
 
 class OptionalTypeParameterBuilder implements BuilderTerminal<OptionalTypeParameter> {
-  private _defaultType: string;
-  private _name: string;
+  private _defaultType: string = '';
+  private _name: string = '';
 
   constructor(name: string) {
     this._name = name;

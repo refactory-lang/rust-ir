@@ -12,7 +12,7 @@ export function modItem(config: ModItemConfig): ModItem {
 
 class ModBuilder implements BuilderTerminal<ModItem> {
   private _body?: string;
-  private _name: string;
+  private _name: string = '';
   private _children?: string;
 
   constructor(name: string) {

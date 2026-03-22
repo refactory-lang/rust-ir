@@ -11,7 +11,7 @@ export function tupleStructPattern(config: TupleStructPatternConfig): TupleStruc
 }
 
 class TupleStructPatternBuilder implements BuilderTerminal<TupleStructPattern> {
-  private _type: string;
+  private _type: string = '';
   private _children: string[] = [];
 
   constructor(type_: string) {

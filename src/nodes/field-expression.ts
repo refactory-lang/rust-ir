@@ -11,8 +11,8 @@ export function fieldExpression(config: FieldExpressionConfig): FieldExpression 
 }
 
 class FieldBuilder implements BuilderTerminal<FieldExpression> {
-  private _field: string;
-  private _value: string;
+  private _field: string = '';
+  private _value: string = '';
 
   constructor(field: string) {
     this._field = field;

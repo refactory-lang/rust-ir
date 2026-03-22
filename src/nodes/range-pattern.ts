@@ -13,7 +13,7 @@ export function rangePattern(config: RangePatternConfig): RangePattern {
 class RangePatternBuilder implements BuilderTerminal<RangePattern> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class RangePatternBuilder implements BuilderTerminal<RangePattern> {
   }
 }
 
-export function range_pattern(children: string): RangePatternBuilder {
+export function range_pattern(children: string[]): RangePatternBuilder {
   return new RangePatternBuilder(children);
 }

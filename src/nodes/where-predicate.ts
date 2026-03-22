@@ -11,8 +11,8 @@ export function wherePredicate(config: WherePredicateConfig): WherePredicate {
 }
 
 class WherePredicateBuilder implements BuilderTerminal<WherePredicate> {
-  private _bounds: string;
-  private _left: string;
+  private _bounds: string = '';
+  private _left: string = '';
 
   constructor(bounds: string) {
     this._bounds = bounds;

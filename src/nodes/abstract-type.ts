@@ -11,7 +11,7 @@ export function abstractType(config: AbstractTypeConfig): AbstractType {
 }
 
 class AbstractTypeBuilder implements BuilderTerminal<AbstractType> {
-  private _trait: string;
+  private _trait: string = '';
   private _children?: string;
 
   constructor(trait: string) {

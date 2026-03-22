@@ -11,8 +11,8 @@ export function functionSignatureItem(config: FunctionSignatureItemConfig): Func
 }
 
 class FunctionSignatureBuilder implements BuilderTerminal<FunctionSignatureItem> {
-  private _name: string;
-  private _parameters: string;
+  private _name: string = '';
+  private _parameters: string = '';
   private _returnType?: string;
   private _typeParameters?: string;
   private _children: string[] = [];

@@ -11,8 +11,8 @@ export function closureExpression(config: ClosureExpressionConfig): ClosureExpre
 }
 
 class ClosureBuilder implements BuilderTerminal<ClosureExpression> {
-  private _body: string;
-  private _parameters: string;
+  private _body: string = '';
+  private _parameters: string = '';
   private _returnType?: string;
 
   constructor(body: string) {

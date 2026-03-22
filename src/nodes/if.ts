@@ -12,8 +12,8 @@ export function ifExpression(config: IfExpressionConfig): IfExpression {
 
 class IfBuilder implements BuilderTerminal<IfExpression> {
   private _alternative?: string;
-  private _condition: string;
-  private _consequence: string;
+  private _condition: string = '';
+  private _consequence: string = '';
 
   constructor(condition: string) {
     this._condition = condition;

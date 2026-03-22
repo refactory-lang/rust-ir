@@ -11,8 +11,8 @@ export function higherRankedTraitBound(config: HigherRankedTraitBoundConfig): Hi
 }
 
 class HigherRankedTraitBoundBuilder implements BuilderTerminal<HigherRankedTraitBound> {
-  private _type: string;
-  private _typeParameters: string;
+  private _type: string = '';
+  private _typeParameters: string = '';
 
   constructor(type_: string) {
     this._type = type_;

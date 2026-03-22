@@ -13,7 +13,7 @@ export function orPattern(config: OrPatternConfig): OrPattern {
 class OrPatternBuilder implements BuilderTerminal<OrPattern> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class OrPatternBuilder implements BuilderTerminal<OrPattern> {
   }
 }
 
-export function or_pattern(children: string): OrPatternBuilder {
+export function or_pattern(children: string[]): OrPatternBuilder {
   return new OrPatternBuilder(children);
 }

@@ -11,7 +11,7 @@ export function loopExpression(config: LoopExpressionConfig): LoopExpression {
 }
 
 class LoopBuilder implements BuilderTerminal<LoopExpression> {
-  private _body: string;
+  private _body: string = '';
   private _children?: string;
 
   constructor(body: string) {

@@ -11,9 +11,9 @@ export function traitItem(config: TraitItemConfig): TraitItem {
 }
 
 class TraitBuilder implements BuilderTerminal<TraitItem> {
-  private _body: string;
+  private _body: string = '';
   private _bounds?: string;
-  private _name: string;
+  private _name: string = '';
   private _typeParameters?: string;
   private _children: string[] = [];
 

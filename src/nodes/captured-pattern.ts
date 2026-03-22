@@ -13,7 +13,7 @@ export function capturedPattern(config: CapturedPatternConfig): CapturedPattern 
 class CapturedPatternBuilder implements BuilderTerminal<CapturedPattern> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class CapturedPatternBuilder implements BuilderTerminal<CapturedPattern> {
   }
 }
 
-export function captured_pattern(children: string): CapturedPatternBuilder {
+export function captured_pattern(children: string[]): CapturedPatternBuilder {
   return new CapturedPatternBuilder(children);
 }

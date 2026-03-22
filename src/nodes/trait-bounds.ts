@@ -13,7 +13,7 @@ export function traitBounds(config: TraitBoundsConfig): TraitBounds {
 class TraitBoundsBuilder implements BuilderTerminal<TraitBounds> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class TraitBoundsBuilder implements BuilderTerminal<TraitBounds> {
   }
 }
 
-export function trait_bounds(children: string): TraitBoundsBuilder {
+export function trait_bounds(children: string[]): TraitBoundsBuilder {
   return new TraitBoundsBuilder(children);
 }

@@ -11,9 +11,9 @@ export function functionItem(config: FunctionItemConfig): FunctionItem {
 }
 
 class FunctionBuilder implements BuilderTerminal<FunctionItem> {
-  private _body: string;
-  private _name: string;
-  private _parameters: string;
+  private _body: string = '';
+  private _name: string = '';
+  private _parameters: string = '';
   private _returnType?: string;
   private _typeParameters?: string;
   private _children: string[] = [];

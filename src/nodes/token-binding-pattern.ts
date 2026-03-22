@@ -11,8 +11,8 @@ export function tokenBindingPattern(config: TokenBindingPatternConfig): TokenBin
 }
 
 class TokenBindingPatternBuilder implements BuilderTerminal<TokenBindingPattern> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
 
   constructor(name: string) {
     this._name = name;

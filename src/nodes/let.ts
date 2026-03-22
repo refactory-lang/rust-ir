@@ -12,7 +12,7 @@ export function letDeclaration(config: LetDeclarationConfig): LetDeclaration {
 
 class LetBuilder implements BuilderTerminal<LetDeclaration> {
   private _alternative?: string;
-  private _pattern: string;
+  private _pattern: string = '';
   private _type?: string;
   private _value?: string;
   private _children?: string;

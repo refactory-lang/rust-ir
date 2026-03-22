@@ -13,7 +13,7 @@ export function tupleExpression(config: TupleExpressionConfig): TupleExpression 
 class TupleBuilder implements BuilderTerminal<TupleExpression> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class TupleBuilder implements BuilderTerminal<TupleExpression> {
   }
 }
 
-export function tuple(children: string): TupleBuilder {
+export function tuple(children: string[]): TupleBuilder {
   return new TupleBuilder(children);
 }

@@ -13,7 +13,7 @@ export function tupleType(config: TupleTypeConfig): TupleType {
 class TupleTypeBuilder implements BuilderTerminal<TupleType> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class TupleTypeBuilder implements BuilderTerminal<TupleType> {
   }
 }
 
-export function tuple_type(children: string): TupleTypeBuilder {
+export function tuple_type(children: string[]): TupleTypeBuilder {
   return new TupleTypeBuilder(children);
 }

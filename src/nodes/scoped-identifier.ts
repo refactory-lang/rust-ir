@@ -11,7 +11,7 @@ export function scopedIdentifier(config: ScopedIdentifierConfig): ScopedIdentifi
 }
 
 class ScopedIdentifierBuilder implements BuilderTerminal<ScopedIdentifier> {
-  private _name: string;
+  private _name: string = '';
   private _path?: string;
 
   constructor(name: string) {

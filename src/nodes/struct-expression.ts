@@ -11,8 +11,8 @@ export function structExpression(config: StructExpressionConfig): StructExpressi
 }
 
 class StructBuilder implements BuilderTerminal<StructExpression> {
-  private _body: string;
-  private _name: string;
+  private _body: string = '';
+  private _name: string = '';
 
   constructor(name: string) {
     this._name = name;

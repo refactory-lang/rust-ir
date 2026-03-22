@@ -11,8 +11,8 @@ export function typeBinding(config: TypeBindingConfig): TypeBinding {
 }
 
 class TypeBindingBuilder implements BuilderTerminal<TypeBinding> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
   private _typeArguments?: string;
 
   constructor(name: string) {

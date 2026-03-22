@@ -11,7 +11,7 @@ export function constBlock(config: ConstBlockConfig): ConstBlock {
 }
 
 class ConstBlockBuilder implements BuilderTerminal<ConstBlock> {
-  private _body: string;
+  private _body: string = '';
 
   constructor(body: string) {
     this._body = body;

@@ -11,8 +11,8 @@ export function constItem(config: ConstItemConfig): ConstItem {
 }
 
 class ConstBuilder implements BuilderTerminal<ConstItem> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
   private _value?: string;
   private _children?: string;
 

@@ -13,7 +13,7 @@ export function letChain(config: LetChainConfig): LetChain {
 class LetChainBuilder implements BuilderTerminal<LetChain> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class LetChainBuilder implements BuilderTerminal<LetChain> {
   }
 }
 
-export function let_chain(children: string): LetChainBuilder {
+export function let_chain(children: string[]): LetChainBuilder {
   return new LetChainBuilder(children);
 }

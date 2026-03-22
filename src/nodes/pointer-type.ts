@@ -11,7 +11,7 @@ export function pointerType(config: PointerTypeConfig): PointerType {
 }
 
 class PointerTypeBuilder implements BuilderTerminal<PointerType> {
-  private _type: string;
+  private _type: string = '';
   private _children?: string;
 
   constructor(type_: string) {

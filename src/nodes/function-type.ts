@@ -11,7 +11,7 @@ export function functionType(config: FunctionTypeConfig): FunctionType {
 }
 
 class FunctionTypeBuilder implements BuilderTerminal<FunctionType> {
-  private _parameters: string;
+  private _parameters: string = '';
   private _returnType?: string;
   private _trait?: string;
   private _children: string[] = [];

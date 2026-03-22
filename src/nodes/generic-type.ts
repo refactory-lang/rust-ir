@@ -11,8 +11,8 @@ export function genericType(config: GenericTypeConfig): GenericType {
 }
 
 class GenericTypeBuilder implements BuilderTerminal<GenericType> {
-  private _type: string;
-  private _typeArguments: string;
+  private _type: string = '';
+  private _typeArguments: string = '';
 
   constructor(type_: string) {
     this._type = type_;

@@ -13,7 +13,7 @@ export function implItem(config: ImplItemConfig): ImplItem {
 class ImplBuilder implements BuilderTerminal<ImplItem> {
   private _body?: string;
   private _trait?: string;
-  private _type: string;
+  private _type: string = '';
   private _typeParameters?: string;
   private _children?: string;
 

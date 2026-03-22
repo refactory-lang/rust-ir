@@ -13,7 +13,7 @@ export function indexExpression(config: IndexExpressionConfig): IndexExpression 
 class IndexBuilder implements BuilderTerminal<IndexExpression> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class IndexBuilder implements BuilderTerminal<IndexExpression> {
   }
 }
 
-export function index(children: string): IndexBuilder {
+export function index(children: string[]): IndexBuilder {
   return new IndexBuilder(children);
 }

@@ -11,8 +11,8 @@ export function fieldDeclaration(config: FieldDeclarationConfig): FieldDeclarati
 }
 
 class FieldBuilder implements BuilderTerminal<FieldDeclaration> {
-  private _name: string;
-  private _type: string;
+  private _name: string = '';
+  private _type: string = '';
   private _children?: string;
 
   constructor(name: string) {

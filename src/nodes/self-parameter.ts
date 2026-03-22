@@ -13,7 +13,7 @@ export function selfParameter(config: SelfParameterConfig): SelfParameter {
 class SelfParameterBuilder implements BuilderTerminal<SelfParameter> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class SelfParameterBuilder implements BuilderTerminal<SelfParameter> {
   }
 }
 
-export function self_parameter(children: string): SelfParameterBuilder {
+export function self_parameter(children: string[]): SelfParameterBuilder {
   return new SelfParameterBuilder(children);
 }

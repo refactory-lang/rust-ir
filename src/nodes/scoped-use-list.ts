@@ -11,7 +11,7 @@ export function scopedUseList(config: ScopedUseListConfig): ScopedUseList {
 }
 
 class ScopedUseListBuilder implements BuilderTerminal<ScopedUseList> {
-  private _list: string;
+  private _list: string = '';
   private _path?: string;
 
   constructor(list: string) {

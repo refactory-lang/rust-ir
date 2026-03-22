@@ -11,7 +11,7 @@ export function useDeclaration(config: UseDeclarationConfig): UseDeclaration {
 }
 
 class UseBuilder implements BuilderTerminal<UseDeclaration> {
-  private _argument: string;
+  private _argument: string = '';
   private _children?: string;
 
   constructor(argument: string) {

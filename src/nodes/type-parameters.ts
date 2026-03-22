@@ -13,7 +13,7 @@ export function typeParameters(config: TypeParametersConfig): TypeParameters {
 class TypeParametersBuilder implements BuilderTerminal<TypeParameters> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class TypeParametersBuilder implements BuilderTerminal<TypeParameters> {
   }
 }
 
-export function type_parameters(children: string): TypeParametersBuilder {
+export function type_parameters(children: string[]): TypeParametersBuilder {
   return new TypeParametersBuilder(children);
 }

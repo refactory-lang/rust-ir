@@ -11,8 +11,8 @@ export function callExpression(config: CallExpressionConfig): CallExpression {
 }
 
 class CallBuilder implements BuilderTerminal<CallExpression> {
-  private _arguments: string;
-  private _function: string;
+  private _arguments: string = '';
+  private _function: string = '';
 
   constructor(arguments_: string) {
     this._arguments = arguments_;

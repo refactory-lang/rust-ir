@@ -13,7 +13,7 @@ export function forLifetimes(config: ForLifetimesConfig): ForLifetimes {
 class ForLifetimesBuilder implements BuilderTerminal<ForLifetimes> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class ForLifetimesBuilder implements BuilderTerminal<ForLifetimes> {
   }
 }
 
-export function for_lifetimes(children: string): ForLifetimesBuilder {
+export function for_lifetimes(children: string[]): ForLifetimesBuilder {
   return new ForLifetimesBuilder(children);
 }

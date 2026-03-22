@@ -11,8 +11,8 @@ export function letCondition(config: LetConditionConfig): LetCondition {
 }
 
 class LetConditionBuilder implements BuilderTerminal<LetCondition> {
-  private _pattern: string;
-  private _value: string;
+  private _pattern: string = '';
+  private _value: string = '';
 
   constructor(pattern: string) {
     this._pattern = pattern;

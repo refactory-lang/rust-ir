@@ -13,7 +13,7 @@ export function mutPattern(config: MutPatternConfig): MutPattern {
 class MutPatternBuilder implements BuilderTerminal<MutPattern> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class MutPatternBuilder implements BuilderTerminal<MutPattern> {
   }
 }
 
-export function mut_pattern(children: string): MutPatternBuilder {
+export function mut_pattern(children: string[]): MutPatternBuilder {
   return new MutPatternBuilder(children);
 }

@@ -12,7 +12,7 @@ export function externCrateDeclaration(config: ExternCrateDeclarationConfig): Ex
 
 class ExternCrateBuilder implements BuilderTerminal<ExternCrateDeclaration> {
   private _alias?: string;
-  private _name: string;
+  private _name: string = '';
   private _children: string[] = [];
 
   constructor(name: string) {

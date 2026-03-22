@@ -11,8 +11,8 @@ export function matchArm(config: MatchArmConfig): MatchArm {
 }
 
 class MatchArmBuilder implements BuilderTerminal<MatchArm> {
-  private _pattern: string;
-  private _value: string;
+  private _pattern: string = '';
+  private _value: string = '';
   private _children: string[] = [];
 
   constructor(pattern: string) {

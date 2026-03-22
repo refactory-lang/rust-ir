@@ -11,8 +11,8 @@ export function useAsClause(config: UseAsClauseConfig): UseAsClause {
 }
 
 class UseAsClauseBuilder implements BuilderTerminal<UseAsClause> {
-  private _alias: string;
-  private _path: string;
+  private _alias: string = '';
+  private _path: string = '';
 
   constructor(alias: string) {
     this._alias = alias;

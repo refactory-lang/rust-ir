@@ -11,8 +11,8 @@ export function unionItem(config: UnionItemConfig): UnionItem {
 }
 
 class UnionBuilder implements BuilderTerminal<UnionItem> {
-  private _body: string;
-  private _name: string;
+  private _body: string = '';
+  private _name: string = '';
   private _typeParameters?: string;
   private _children: string[] = [];
 

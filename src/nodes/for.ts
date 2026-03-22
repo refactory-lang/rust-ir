@@ -11,9 +11,9 @@ export function forExpression(config: ForExpressionConfig): ForExpression {
 }
 
 class ForBuilder implements BuilderTerminal<ForExpression> {
-  private _body: string;
-  private _pattern: string;
-  private _value: string;
+  private _body: string = '';
+  private _pattern: string = '';
+  private _value: string = '';
   private _children?: string;
 
   constructor(body: string) {

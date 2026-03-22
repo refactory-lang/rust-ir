@@ -13,7 +13,7 @@ export function typeArguments(config: TypeArgumentsConfig): TypeArguments {
 class TypeArgumentsBuilder implements BuilderTerminal<TypeArguments> {
   private _children: string[] = [];
 
-  constructor(children: string) {
+  constructor(children: string[]) {
     this._children = children;
   }
 
@@ -32,6 +32,6 @@ class TypeArgumentsBuilder implements BuilderTerminal<TypeArguments> {
   }
 }
 
-export function type_arguments(children: string): TypeArgumentsBuilder {
+export function type_arguments(children: string[]): TypeArgumentsBuilder {
   return new TypeArgumentsBuilder(children);
 }

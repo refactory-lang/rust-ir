@@ -11,8 +11,8 @@ export function fieldInitializer(config: FieldInitializerConfig): FieldInitializ
 }
 
 class FieldInitializerBuilder implements BuilderTerminal<FieldInitializer> {
-  private _field: string;
-  private _value: string;
+  private _field: string = '';
+  private _value: string = '';
   private _children: string[] = [];
 
   constructor(field: string) {

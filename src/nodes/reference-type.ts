@@ -11,7 +11,7 @@ export function referenceType(config: ReferenceTypeConfig): ReferenceType {
 }
 
 class ReferenceTypeBuilder implements BuilderTerminal<ReferenceType> {
-  private _type: string;
+  private _type: string = '';
   private _children: string[] = [];
 
   constructor(type_: string) {

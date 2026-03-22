@@ -11,7 +11,7 @@ export function structPattern(config: StructPatternConfig): StructPattern {
 }
 
 class StructPatternBuilder implements BuilderTerminal<StructPattern> {
-  private _type: string;
+  private _type: string = '';
   private _children: string[] = [];
 
   constructor(type_: string) {

@@ -11,9 +11,9 @@ export function binaryExpression(config: BinaryExpressionConfig): BinaryExpressi
 }
 
 class BinaryBuilder implements BuilderTerminal<BinaryExpression> {
-  private _left: string;
-  private _operator: string;
-  private _right: string;
+  private _left: string = '';
+  private _operator: string = '';
+  private _right: string = '';
 
   constructor(left: string) {
     this._left = left;

@@ -11,8 +11,8 @@ export function qualifiedType(config: QualifiedTypeConfig): QualifiedType {
 }
 
 class QualifiedTypeBuilder implements BuilderTerminal<QualifiedType> {
-  private _alias: string;
-  private _type: string;
+  private _alias: string = '';
+  private _type: string = '';
 
   constructor(alias: string) {
     this._alias = alias;

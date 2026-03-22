@@ -11,8 +11,8 @@ function createParameter(config: ParameterConfig): Parameter {
 }
 
 class ParameterBuilder implements BuilderTerminal<Parameter> {
-  private _pattern: string;
-  private _type: string;
+  private _pattern: string = '';
+  private _type: string = '';
   private _children?: string;
 
   constructor(pattern: string) {

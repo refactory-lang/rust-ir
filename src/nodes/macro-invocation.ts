@@ -11,7 +11,7 @@ export function macroInvocation(config: MacroInvocationConfig): MacroInvocation 
 }
 
 class MacroInvocationBuilder implements BuilderTerminal<MacroInvocation> {
-  private _macro: string;
+  private _macro: string = '';
   private _children?: string;
 
   constructor(macro: string) {

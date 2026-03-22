@@ -11,8 +11,8 @@ export function typeCastExpression(config: TypeCastExpressionConfig): TypeCastEx
 }
 
 class TypeCastBuilder implements BuilderTerminal<TypeCastExpression> {
-  private _type: string;
-  private _value: string;
+  private _type: string = '';
+  private _value: string = '';
 
   constructor(type_: string) {
     this._type = type_;

@@ -11,7 +11,7 @@ export function fieldPattern(config: FieldPatternConfig): FieldPattern {
 }
 
 class FieldPatternBuilder implements BuilderTerminal<FieldPattern> {
-  private _name: string;
+  private _name: string = '';
   private _pattern?: string;
   private _children?: string;
 
